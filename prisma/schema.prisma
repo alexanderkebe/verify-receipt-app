@@ -1,0 +1,380 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  OWNER
+  MANAGER
+  EMPLOYEE
+  PLATFORM_ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum BusinessStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum Provider {
+  CBE
+  TELEBIRR
+  DASHEN
+  ABYSSINIA
+  CBE_BIRR
+  MPESA
+}
+
+enum VerificationStatus {
+  VERIFIED
+  NOT_FOUND
+  INVALID
+  ERROR
+  TIMEOUT
+  UNSUPPORTED
+}
+
+enum TransactionStatus {
+  SUCCESS
+  FAILED
+  PENDING
+  CANCELLED
+  UNKNOWN
+}
+
+enum ResultLevel {
+  GREEN
+  RED
+  YELLOW
+}
+
+enum EmployeeDecision {
+  ACCEPTED
+  REJECTED
+  ESCALATED
+}
+
+enum AlertSeverity {
+  INFORMATIONAL
+  WARNING
+  HIGH_RISK
+  CRITICAL
+}
+
+enum AlertType {
+  RECIPIENT_MISMATCH
+  DUPLICATE_RECEIPT
+  AMOUNT_MISMATCH
+  UNSUCCESSFUL_TRANSACTION
+  APPARENT_ALTERATION
+  REPEATED_FAILURES
+  UNUSUAL_ACTIVITY
+  REPEATED_OVERRIDES
+}
+
+enum AlertStatus {
+  OPEN
+  ASSIGNED
+  RESOLVED
+  DISMISSED
+}
+
+enum OwnershipStatus {
+  DECLARED
+  DOCUMENT_SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model Business {
+  id                 String          @id @default(uuid()) @db.Uuid
+  legalName          String
+  tradingName        String?
+  businessType       String
+  registrationNumber String?         @unique
+  taxId              String?
+  sector             String?
+  description        String?
+  phone              String
+  email              String          @unique
+  address            String?
+  city               String?
+  region             String?
+  logoUrl            String?
+  status             BusinessStatus  @default(PENDING_VERIFICATION)
+  preferredLanguage  String          @default("en")
+  tosAcceptedAt      DateTime?
+  emailVerifiedAt    DateTime?
+  verificationCode   String?
+  verificationCodeExp DateTime?
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  // Relations
+  branches           Branch[]
+  users              User[]
+  paymentAccounts    PaymentAccount[]
+  verifications      ReceiptVerification[]
+  fraudAlerts        FraudAlert[]
+  auditLogs          AuditLog[]
+  subscription       Subscription?
+
+  @@index([email])
+  @@index([status])
+  @@index([registrationNumber])
+}
+
+model Branch {
+  id           String         @id @default(uuid()) @db.Uuid
+  businessId   String         @db.Uuid
+  name         String
+  address      String?
+  phone        String?
+  managerId    String?        @db.Uuid
+  status       BusinessStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // Relations
+  business     Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  manager      User?          @relation("BranchManager", fields: [managerId], references: [id])
+  users        User[]         @relation("BranchEmployees")
+  paymentAccounts PaymentAccount[]
+  verifications ReceiptVerification[]
+
+  @@index([businessId])
+}
+
+model User {
+  id             String     @id @default(uuid()) @db.Uuid
+  businessId     String?    @db.Uuid
+  branchId       String?    @db.Uuid
+  fullName       String
+  employeeCode   String?
+  email          String     @unique
+  phone          String?
+  passwordHash   String
+  photoUrl       String?
+  jobTitle       String?
+  role           UserRole   @default(EMPLOYEE)
+  status         UserStatus @default(PENDING)
+  lastLogin      DateTime?
+  loginAttempts  Int        @default(0)
+  lockedUntil    DateTime?
+  invitationToken String?
+  invitationExp  DateTime?
+  resetToken     String?
+  resetTokenExp  DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // Relations
+  business       Business?  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch         Branch?    @relation("BranchEmployees", fields: [branchId], references: [id])
+  managedBranches Branch[]  @relation("BranchManager")
+  verifications  ReceiptVerification[] @relation("VerificationEmployee")
+  overrides      ReceiptVerification[] @relation("OverrideUser")
+  reviewedAlerts FraudAlert[]
+  auditLogs      AuditLog[]
+
+  @@index([businessId])
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+model PaymentAccount {
+  id                    String          @id @default(uuid()) @db.Uuid
+  businessId            String          @db.Uuid
+  branchId              String?         @db.Uuid
+  provider              Provider
+  accountHolderName     String
+  accountNumberEncrypted String         // Encrypted full account number
+  accountNumberMasked   String          // e.g. "****3377"
+  suffix                String?         // 8-digit for CBE, 5-digit for BoA
+  phoneNumber           String?         // For mobile money
+  nickname              String?
+  status                UserStatus      @default(ACTIVE)
+  ownershipStatus       OwnershipStatus @default(DECLARED)
+  proofDocUrl           String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  // Relations
+  business              Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch                Branch?         @relation(fields: [branchId], references: [id])
+  verifications         ReceiptVerification[]
+
+  @@index([businessId])
+  @@index([provider])
+  @@index([status])
+}
+
+model ReceiptVerification {
+  id                   String            @id @default(uuid()) @db.Uuid
+  businessId           String            @db.Uuid
+  branchId             String?           @db.Uuid
+  employeeId           String            @db.Uuid
+  matchedAccountId     String?           @db.Uuid
+  provider             Provider
+  referenceHash        String            // SHA-256 hash for duplicate detection
+  referenceMasked      String            // Masked reference for display
+  expectedAmount       Decimal?          @db.Decimal(12, 2)
+  verifiedAmount       Decimal?          @db.Decimal(12, 2)
+  currency             String            @default("ETB")
+  payerName            String?
+  recipientName        String?
+  recipientAccountMasked String?
+  recipientMatches     Boolean?
+  amountMatches        Boolean?
+  isDuplicate          Boolean           @default(false)
+  duplicateOfId        String?           @db.Uuid
+  verificationStatus   VerificationStatus
+  transactionStatus    TransactionStatus?
+  resultLevel          ResultLevel
+  employeeDecision     EmployeeDecision?
+  decisionReason       String?
+  overrideByUserId     String?           @db.Uuid
+  overrideReason       String?
+  overrideAt           DateTime?
+  apiResponseStatus    String?
+  apiResponseDurationMs Int?
+  rawApiResponse       Json?
+  extractedFields      Json?             // OCR extracted fields
+  originalExtraction   Json?             // Before employee correction
+  riskScore            String?
+  transactionDate      DateTime?
+  createdAt            DateTime          @default(now())
+
+  // Relations
+  business             Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch               Branch?           @relation(fields: [branchId], references: [id])
+  employee             User              @relation("VerificationEmployee", fields: [employeeId], references: [id])
+  matchedAccount       PaymentAccount?   @relation(fields: [matchedAccountId], references: [id])
+  overrideBy           User?             @relation("OverrideUser", fields: [overrideByUserId], references: [id])
+  duplicateOf          ReceiptVerification? @relation("DuplicateChain", fields: [duplicateOfId], references: [id])
+  duplicates           ReceiptVerification[] @relation("DuplicateChain")
+  image                ReceiptImage?
+  fraudAlerts          FraudAlert[]
+
+  @@index([businessId])
+  @@index([referenceHash])
+  @@index([provider])
+  @@index([resultLevel])
+  @@index([createdAt])
+  @@index([employeeId])
+  @@index([businessId, referenceHash])
+}
+
+model ReceiptImage {
+  id              String   @id @default(uuid()) @db.Uuid
+  verificationId  String   @unique @db.Uuid
+  storageLocation String
+  fileHash        String
+  mimeType        String
+  fileSizeBytes   Int
+  retentionExpiry DateTime
+  createdAt       DateTime @default(now())
+
+  // Relations
+  verification    ReceiptVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+}
+
+model FraudAlert {
+  id              String       @id @default(uuid()) @db.Uuid
+  verificationId  String       @db.Uuid
+  businessId      String       @db.Uuid
+  severity        AlertSeverity
+  alertType       AlertType
+  status          AlertStatus  @default(OPEN)
+  description     String
+  reviewedById    String?      @db.Uuid
+  resolution      String?
+  resolvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+
+  // Relations
+  verification    ReceiptVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+  business        Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  reviewedBy      User?        @relation(fields: [reviewedById], references: [id])
+
+  @@index([businessId])
+  @@index([severity])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  businessId  String?  @db.Uuid
+  userId      String?  @db.Uuid
+  action      String   // e.g. "employee.created", "payment_account.updated"
+  entityType  String   // e.g. "User", "PaymentAccount"
+  entityId    String?
+  oldValues   Json?
+  newValues   Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  business    Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id])
+
+  @@index([businessId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Subscription {
+  id                       String             @id @default(uuid()) @db.Uuid
+  businessId               String             @unique @db.Uuid
+  tier                     SubscriptionTier   @default(FREE)
+  monthlyVerificationLimit Int                @default(50) // Free: 50, Basic: 500, Pro: -1 (unlimited)
+  verificationsUsedThisMonth Int              @default(0)
+  currentPeriodStart       DateTime           @default(now())
+  currentPeriodEnd         DateTime
+  status                   SubscriptionStatus @default(ACTIVE)
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+
+  // Relations
+  business                 Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
