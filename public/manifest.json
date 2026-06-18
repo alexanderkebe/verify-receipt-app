@@ -1,0 +1,10 @@
+{
+  "name": "ReceiptGuard — Receipt Verification & Fraud Prevention",
+  "short_name": "ReceiptGuard",
+  "description": "Verify customer payment receipts and prevent fraud.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0A0E17",
+  "theme_color": "#0A0E17",
+  "icons": []
+}

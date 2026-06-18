@@ -208,7 +208,7 @@ export async function verifyByImage(
 ): Promise<NormalizedVerificationResult> {
   try {
     const formData = new FormData();
-    const blob = new Blob([imageBuffer], { type: mimeType });
+    const blob = new Blob([new Uint8Array(imageBuffer)], { type: mimeType });
     formData.append('image', blob, `receipt.${mimeType.split('/')[1]}`);
 
     const response = await fetch(`${VERIFIER_API_BASE_URL}/verify-image`, {

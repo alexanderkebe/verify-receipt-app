@@ -4,6 +4,7 @@
 // ============================================
 
 import prisma from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { hashReference, maskReference } from '@/lib/crypto';
 import { verifyByReference, verifyByImage } from '@/lib/verifier-api';
 import { generateFraudAlerts } from '@/lib/fraud-detection';
@@ -99,8 +100,8 @@ export async function performVerification(
       resultLevel,
       apiResponseStatus: apiResult.verificationStatus,
       apiResponseDurationMs: processingTime,
-      rawApiResponse: apiResult.rawResponse,
-      extractedFields: apiResult as unknown as Record<string, unknown>,
+      rawApiResponse: apiResult.rawResponse as unknown as Prisma.InputJsonValue,
+      extractedFields: apiResult as unknown as Prisma.InputJsonValue,
       transactionDate: apiResult.transactionDate ? new Date(apiResult.transactionDate) : null,
     },
   });
@@ -230,7 +231,7 @@ export async function performImageVerification(
       transactionStatus: apiResult.transactionStatus,
       resultLevel,
       apiResponseDurationMs: processingTime,
-      rawApiResponse: apiResult.rawResponse,
+      rawApiResponse: apiResult.rawResponse as unknown as Prisma.InputJsonValue,
       transactionDate: apiResult.transactionDate ? new Date(apiResult.transactionDate) : null,
     },
   });
