@@ -15,12 +15,36 @@ const STEPS = [
 ];
 
 const FEATURES = [
-  { title: 'Instant verification', text: 'Confirm payments across CBE, Telebirr, M-Pesa and more.' },
-  { title: 'Duplicate detection', text: 'Catch receipts that have already been used.' },
-  { title: 'Recipient matching', text: 'Flag payments sent to the wrong account.' },
-  { title: 'Fraud alerts', text: 'Automatic alerts for mismatches and suspicious patterns.' },
-  { title: 'Employee management', text: 'Add staff with roles and a full audit trail.' },
-  { title: 'Reports & history', text: 'Searchable history and activity reports.' },
+  {
+    title: 'Instant verification',
+    text: 'Confirm payments across CBE, Telebirr, M-Pesa and more.',
+    detail: 'Validate references, amounts, timestamps, and payment status in seconds.',
+  },
+  {
+    title: 'Duplicate detection',
+    text: 'Catch receipts that have already been used.',
+    detail: 'Every submitted reference is checked against your verification history.',
+  },
+  {
+    title: 'Recipient matching',
+    text: 'Flag payments sent to the wrong account.',
+    detail: 'Compare the receipt recipient with your registered business payment accounts.',
+  },
+  {
+    title: 'Fraud alerts',
+    text: 'Automatic alerts for mismatches and suspicious patterns.',
+    detail: 'Surface unusual activity early so your team can review it before approval.',
+  },
+  {
+    title: 'Employee management',
+    text: 'Add staff with roles and a full audit trail.',
+    detail: 'Control access and keep a traceable record of every verification decision.',
+  },
+  {
+    title: 'Reports & history',
+    text: 'Searchable history and activity reports.',
+    detail: 'Filter, review, and export the records you need for reconciliation.',
+  },
 ];
 
 export default function Home() {
@@ -62,7 +86,7 @@ export default function Home() {
         </div>
         <div className={styles.providers}>
           {PROVIDERS.map((p) => (
-            <span key={p} className="badge badge-neutral">
+            <span key={p} className={`badge badge-neutral ${styles.providerTab}`}>
               {PROVIDER_LABELS[p]}
             </span>
           ))}
@@ -73,7 +97,7 @@ export default function Home() {
         <h2 className={styles.sectionTitle}>How it works</h2>
         <div className="grid-4">
           {STEPS.map((s) => (
-            <div className="card card-padding" key={s.n}>
+            <div className={`card card-padding ${styles.stepCard}`} key={s.n}>
               <div className={styles.stepNum}>{s.n}</div>
               <h3 className="font-semibold mt-4">{s.title}</h3>
               <p className="text-sm text-secondary mt-2">{s.text}</p>
@@ -86,9 +110,10 @@ export default function Home() {
         <h2 className={styles.sectionTitle}>Everything you need to fight receipt fraud</h2>
         <div className="grid-3">
           {FEATURES.map((f) => (
-            <div className="card card-padding card-hover" key={f.title}>
+            <div className={`card card-padding ${styles.featureCard}`} key={f.title} tabIndex={0}>
               <h3 className="font-semibold">{f.title}</h3>
               <p className="text-sm text-secondary mt-2">{f.text}</p>
+              <p className={styles.featureDetail}>{f.detail}</p>
             </div>
           ))}
         </div>

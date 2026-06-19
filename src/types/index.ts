@@ -16,12 +16,12 @@ export const PROVIDER_LABELS: Record<Provider, string> = {
 };
 
 export const PROVIDER_COLORS: Record<Provider, string> = {
-  CBE: '#1B4D8E',
-  TELEBIRR: '#00A651',
-  DASHEN: '#D4145A',
-  ABYSSINIA: '#006837',
-  CBE_BIRR: '#2196F3',
-  MPESA: '#4CAF50',
+  CBE: '#11120D',
+  TELEBIRR: '#565449',
+  DASHEN: '#D8CFBC',
+  ABYSSINIA: '#11120D',
+  CBE_BIRR: '#565449',
+  MPESA: '#D8CFBC',
 };
 
 // ---- Verification Types ----
