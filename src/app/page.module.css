@@ -60,6 +60,20 @@
   justify-content: center;
   margin-top: var(--space-10);
 }
+.providerTab {
+  cursor: default;
+  transition:
+    transform var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+.providerTab:hover {
+  transform: translateY(-6px);
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+}
 
 .section {
   padding: var(--space-16) 0;
@@ -82,6 +96,58 @@
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-lg);
 }
+.stepCard {
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+.stepCard:hover {
+  transform: translateY(-8px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-lg);
+}
+
+.featureCard {
+  min-height: 132px;
+  overflow: hidden;
+  cursor: default;
+  transition:
+    transform var(--transition-base),
+    min-height var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+.featureCard:hover,
+.featureCard:focus-visible {
+  min-height: 190px;
+  transform: translateY(-8px) scale(1.025);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-lg);
+  outline: none;
+}
+.featureDetail {
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  opacity: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  transform: translateY(8px);
+  transition:
+    max-height var(--transition-base),
+    margin-top var(--transition-base),
+    opacity var(--transition-base),
+    transform var(--transition-base);
+}
+.featureCard:hover .featureDetail,
+.featureCard:focus-visible .featureDetail {
+  max-height: 100px;
+  margin-top: var(--space-4);
+  opacity: 1;
+  transform: translateY(0);
+}
 
 .footer {
   display: flex;
@@ -97,5 +163,14 @@
 @media (max-width: 768px) {
   .heroTitle {
     font-size: var(--font-size-4xl);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .providerTab,
+  .stepCard,
+  .featureCard,
+  .featureDetail {
+    transition: none;
   }
 }
