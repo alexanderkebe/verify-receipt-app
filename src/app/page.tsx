@@ -47,6 +47,36 @@ const FEATURES = [
   },
 ];
 
+const SECURITY = [
+  { title: 'Encrypted account data', text: 'Payment account numbers are encrypted at rest with AES-256-GCM.' },
+  { title: 'Tenant isolation', text: 'Every business sees only its own data, enforced on every request.' },
+  { title: 'Full audit trail', text: 'Sensitive actions are logged immutably for accountability.' },
+  { title: 'Role-based access', text: 'Owners, managers and employees each see only what they should.' },
+];
+
+const FAQS = [
+  {
+    q: 'Which payment providers are supported?',
+    a: 'CBE, Telebirr, Dashen Bank, Bank of Abyssinia, CBE Birr, and M-Pesa — with more on the way.',
+  },
+  {
+    q: 'How does duplicate detection work?',
+    a: 'Each receipt reference is hashed and checked against your previously accepted payments, so a customer cannot reuse the same receipt twice.',
+  },
+  {
+    q: 'Do I need to install anything?',
+    a: 'No. It runs in any modern browser and can be installed as a progressive web app on your phone.',
+  },
+  {
+    q: 'Is there a free plan?',
+    a: 'Yes. The Free plan includes 50 verifications per month at no cost, so you can try it with no commitment.',
+  },
+  {
+    q: 'What happens if a receipt cannot be verified?',
+    a: 'You will see a clear “unable to verify” result with the reason, so your staff can ask for an alternative confirmation rather than guessing.',
+  },
+];
+
 export default function Home() {
   return (
     <div className={styles.landing}>
@@ -119,6 +149,18 @@ export default function Home() {
         </div>
       </section>
 
+      <section className={styles.section} id="security">
+        <h2 className={styles.sectionTitle}>Your data, protected</h2>
+        <div className="grid-4">
+          {SECURITY.map((s) => (
+            <div className="card card-padding" key={s.title}>
+              <h3 className="font-semibold">{s.title}</h3>
+              <p className="text-sm text-secondary mt-2">{s.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className={styles.section} id="pricing">
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <div className="grid-3">
@@ -149,10 +191,44 @@ export default function Home() {
         </div>
       </section>
 
+      <section className={styles.section} id="faq">
+        <h2 className={styles.sectionTitle}>Frequently asked questions</h2>
+        <div className={styles.faqList}>
+          {FAQS.map((item) => (
+            <details className={styles.faqItem} key={item.q}>
+              <summary className={styles.faqQuestion}>{item.q}</summary>
+              <p className={styles.faqAnswer}>{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.ctaBanner}`}>
+        <h2 className={styles.sectionTitle}>Start verifying receipts today</h2>
+        <p className="text-secondary mb-6">Create a free account — no card required.</p>
+        <Link href="/register" className="btn btn-primary btn-lg">
+          Get started free
+        </Link>
+      </section>
+
       <footer className={styles.footer}>
         <div className="flex items-center gap-2">
           <span className={styles.brandIcon}>R</span>
           <span className="font-semibold">{APP_NAME}</span>
+        </div>
+        <div className="flex items-center gap-6 flex-wrap">
+          <Link href="#security" className="text-sm text-secondary">
+            Security
+          </Link>
+          <Link href="#pricing" className="text-sm text-secondary">
+            Pricing
+          </Link>
+          <Link href="#faq" className="text-sm text-secondary">
+            FAQ
+          </Link>
+          <Link href="/login" className="text-sm text-secondary">
+            Sign in
+          </Link>
         </div>
         <p className="text-sm text-muted">© {APP_NAME}. Receipt verification &amp; fraud prevention.</p>
       </footer>
