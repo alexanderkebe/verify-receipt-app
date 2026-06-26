@@ -11,11 +11,16 @@ import { registerSchema, fieldErrors } from '@/lib/validators';
 import { encrypt, maskAccountNumber } from '@/lib/crypto';
 import { logAuditEvent, AuditActions, extractRequestMeta } from '@/lib/audit';
 import { ok, fail } from '@/lib/api-helpers';
+import { isDemoMode } from '@/lib/demo-data';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  if (isDemoMode()) {
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+    return ok({ businessId: 'demo-business-1', email: body.ownerEmail ?? 'demo@addiscoffee.et' }, 201);
+  }
   let body: unknown;
   try {
     body = await req.json();

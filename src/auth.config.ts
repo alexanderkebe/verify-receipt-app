@@ -10,6 +10,7 @@ import { AUTH_CONFIG } from '@/lib/constants';
 
 export const authConfig = {
   trustHost: true,
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? 'demo-fallback-secret-32-chars-long!!',
   pages: {
     signIn: '/login',
   },

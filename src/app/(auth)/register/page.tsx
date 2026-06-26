@@ -46,12 +46,15 @@ const initial: FormState = {
   tosAccepted: false,
 };
 
+const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(initial);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -78,37 +81,71 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
-    const res = await fetch('/api/business/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        legalName: form.legalName,
-        tradingName: form.tradingName || undefined,
-        businessType: form.businessType,
-        sector: form.sector || undefined,
-        phone: form.phone,
-        email: form.email,
-        city: form.city || undefined,
-        region: form.region || undefined,
-        account: {
-          provider: form.provider,
-          accountHolderName: form.accountHolderName,
-          accountNumber: form.accountNumber,
-          suffix: form.suffix || undefined,
-        },
-        ownerName: form.ownerName,
-        ownerEmail: form.ownerEmail,
-        ownerPassword: form.ownerPassword,
-        tosAccepted: true,
-      }),
-    });
-    const json = await res.json();
-    setLoading(false);
-    if (!res.ok || !json.success) {
-      setError(json.error || 'Registration failed.');
-      return;
+    try {
+      const res = await fetch('/api/business/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          legalName: form.legalName,
+          tradingName: form.tradingName || undefined,
+          businessType: form.businessType,
+          sector: form.sector || undefined,
+          phone: form.phone,
+          email: form.email,
+          city: form.city || undefined,
+          region: form.region || undefined,
+          account: {
+            provider: form.provider,
+            accountHolderName: form.accountHolderName,
+            accountNumber: form.accountNumber,
+            suffix: form.suffix || undefined,
+          },
+          ownerName: form.ownerName,
+          ownerEmail: form.ownerEmail,
+          ownerPassword: form.ownerPassword,
+          tosAccepted: true,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        setError(json.error || 'Registration failed. Please try again.');
+        return;
+      }
+      if (isDemo) {
+        setSuccess(true);
+      } else {
+        router.push('/login?registered=1');
+      }
+    } catch {
+      setError('Could not reach the server. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    router.push('/login?registered=1');
+  }
+
+  if (success) {
+    return (
+      <>
+        <h2 className={styles.formTitle}>Account created!</h2>
+        <p className={styles.formSubtitle}>Your business account is ready to use.</p>
+        <div className="alert mb-4" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '16px', fontSize: 13 }}>
+          <p style={{ fontWeight: 600, marginBottom: 8 }}>Sign in with these demo credentials</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ opacity: 0.7 }}>Email</span>
+              <span style={{ fontFamily: 'monospace' }}>any email address</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ opacity: 0.7 }}>Password</span>
+              <span style={{ fontFamily: 'monospace' }}>demo123</span>
+            </div>
+          </div>
+        </div>
+        <button className="btn btn-primary w-full" onClick={() => router.push('/login')}>
+          Go to sign in
+        </button>
+      </>
+    );
   }
 
   return (
