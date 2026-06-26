@@ -3,12 +3,14 @@ import { NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { paymentAccountSchema, fieldErrors } from '@/lib/validators';
 import { requireRole, ok, fail, handleError } from '@/lib/api-helpers';
+import { isDemoMode, demoPaymentAccounts } from '@/lib/demo-data';
 import { encrypt, maskAccountNumber } from '@/lib/crypto';
 import { logAuditEvent, AuditActions, extractRequestMeta } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  if (isDemoMode()) return ok(demoPaymentAccounts);
   try {
     const ctx = await requireRole('OWNER', 'MANAGER');
     const accounts = await prisma.paymentAccount.findMany({
@@ -34,6 +36,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (isDemoMode()) {
+    const body = await req.json().catch(() => ({}));
+    return ok({ id: `demo-acct-${Date.now()}`, provider: body.provider ?? 'CBE', accountNumberMasked: '****9999' }, 201);
+  }
   try {
     const ctx = await requireRole('OWNER', 'MANAGER');
     const body = await req.json().catch(() => null);

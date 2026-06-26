@@ -2,10 +2,12 @@
 import { NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireRole, ok, handleError } from '@/lib/api-helpers';
+import { isDemoMode, demoAuditLogs } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+  if (isDemoMode()) return ok(demoAuditLogs);
   try {
     await requireRole('PLATFORM_ADMIN');
     const limit = Math.min(200, Number(req.nextUrl.searchParams.get('limit') ?? '100') || 100);

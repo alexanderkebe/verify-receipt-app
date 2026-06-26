@@ -5,10 +5,16 @@ import prisma from '@/lib/prisma';
 import { recordOverride } from '@/lib/verification';
 import { overrideSchema, fieldErrors } from '@/lib/validators';
 import { requireRole, ok, fail, handleError } from '@/lib/api-helpers';
+import { isDemoMode } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (isDemoMode()) {
+    const { id } = await params;
+    const body = await req.json().catch(() => ({}));
+    return ok({ id, finalDecision: body.finalDecision ?? 'ACCEPTED' });
+  }
   try {
     const ctx = await requireRole('OWNER', 'MANAGER');
     if (!ctx.businessId) return fail('No business associated with this account', 403);

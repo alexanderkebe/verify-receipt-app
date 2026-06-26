@@ -4,10 +4,15 @@ import { performVerification } from '@/lib/verification';
 import { manualVerificationSchema, fieldErrors } from '@/lib/validators';
 import { requireBusiness, ok, fail, handleError } from '@/lib/api-helpers';
 import { extractRequestMeta } from '@/lib/audit';
+import { isDemoMode, makeDemoVerificationResult } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  if (isDemoMode()) {
+    const body = await req.json().catch(() => ({}));
+    return ok(makeDemoVerificationResult(body.reference ?? 'REF0000', body.provider ?? 'CBE', body.expectedAmount));
+  }
   try {
     const ctx = await requireBusiness();
     const body = await req.json().catch(() => null);

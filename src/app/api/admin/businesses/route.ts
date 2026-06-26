@@ -2,10 +2,12 @@
 import prisma from '@/lib/prisma';
 import { requireRole, ok, handleError } from '@/lib/api-helpers';
 import type { SubscriptionTier } from '@/types';
+import { isDemoMode, demoAdminBusinesses } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  if (isDemoMode()) return ok(demoAdminBusinesses);
   try {
     await requireRole('PLATFORM_ADMIN');
     const businesses = await prisma.business.findMany({

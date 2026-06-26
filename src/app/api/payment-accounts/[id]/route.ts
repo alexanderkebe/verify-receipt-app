@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { requireRole, ok, fail, handleError } from '@/lib/api-helpers';
+import { isDemoMode } from '@/lib/demo-data';
 import { logAuditEvent, AuditActions, extractRequestMeta } from '@/lib/audit';
 import { fieldErrors } from '@/lib/validators';
 
@@ -15,6 +16,11 @@ const updateSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (isDemoMode()) {
+    const { id } = await params;
+    const body = await req.json().catch(() => ({}));
+    return ok({ id, status: body.status ?? 'ACTIVE', nickname: body.nickname, accountHolderName: body.accountHolderName });
+  }
   try {
     const ctx = await requireRole('OWNER', 'MANAGER');
     const { id } = await params;

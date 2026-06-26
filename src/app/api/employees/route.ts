@@ -4,12 +4,14 @@ import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { employeeSchema, fieldErrors } from '@/lib/validators';
 import { requireRole, ok, fail, handleError } from '@/lib/api-helpers';
+import { isDemoMode, demoEmployees } from '@/lib/demo-data';
 import { logAuditEvent, AuditActions, extractRequestMeta } from '@/lib/audit';
 import { generateToken } from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  if (isDemoMode()) return ok(demoEmployees);
   try {
     const ctx = await requireRole('OWNER', 'MANAGER');
     const employees = await prisma.user.findMany({
@@ -35,6 +37,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (isDemoMode()) {
+    const body = await req.json().catch(() => ({}));
+    const newEmp = { id: `demo-emp-${Date.now()}`, fullName: body.fullName ?? 'New Employee', email: body.email ?? 'new@addiscoffee.et', role: body.role ?? 'EMPLOYEE', status: 'ACTIVE' };
+    return ok({ employee: newEmp, tempPassword: 'demo1234' }, 201);
+  }
   try {
     const ctx = await requireRole('OWNER', 'MANAGER');
     const body = await req.json().catch(() => null);

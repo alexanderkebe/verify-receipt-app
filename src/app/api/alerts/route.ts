@@ -4,10 +4,12 @@ import prisma from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { requireRole, ok, handleError } from '@/lib/api-helpers';
 import type { AlertSeverity, AlertStatus, AlertType } from '@/types';
+import { isDemoMode, demoAlerts } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+  if (isDemoMode()) return ok(demoAlerts);
   try {
     const ctx = await requireRole('OWNER', 'MANAGER');
     const sp = req.nextUrl.searchParams;

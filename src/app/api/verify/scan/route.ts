@@ -5,10 +5,18 @@ import { performImageVerification } from '@/lib/verification';
 import { storeReceiptImage, validateUpload } from '@/lib/image-storage';
 import { requireBusiness, ok, fail, handleError } from '@/lib/api-helpers';
 import { extractRequestMeta } from '@/lib/audit';
+import { isDemoMode, makeDemoVerificationResult } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  if (isDemoMode()) {
+    const formData = await req.formData().catch(() => null);
+    const expectedRaw = formData?.get('expectedAmount');
+    const expectedAmount = expectedRaw ? Number(expectedRaw) : undefined;
+    // Simulate a short processing delay feeling
+    return ok(makeDemoVerificationResult('SCAN' + Date.now(), 'CBE', expectedAmount));
+  }
   try {
     const ctx = await requireBusiness();
 

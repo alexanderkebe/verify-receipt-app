@@ -3,10 +3,16 @@ import { NextRequest } from 'next/server';
 import { recordDecision } from '@/lib/verification';
 import { decisionSchema, fieldErrors } from '@/lib/validators';
 import { requireBusiness, ok, fail, handleError } from '@/lib/api-helpers';
+import { isDemoMode } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (isDemoMode()) {
+    const { id } = await params;
+    const body = await req.json().catch(() => ({}));
+    return ok({ id, decision: body.decision ?? 'ACCEPTED' });
+  }
   try {
     const ctx = await requireBusiness();
     const { id } = await params;

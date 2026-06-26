@@ -2,10 +2,12 @@
 import prisma from '@/lib/prisma';
 import { checkApiHealth } from '@/lib/verifier-api';
 import { requireRole, ok, handleError } from '@/lib/api-helpers';
+import { isDemoMode, demoAdminMonitoring } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  if (isDemoMode()) return ok(demoAdminMonitoring);
   try {
     await requireRole('PLATFORM_ADMIN');
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);

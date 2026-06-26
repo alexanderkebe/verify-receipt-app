@@ -4,6 +4,7 @@ import { getHistory } from '@/lib/history';
 import { requireBusiness, handleError } from '@/lib/api-helpers';
 import { PROVIDER_LABELS } from '@/types';
 import type { Provider, ResultLevel } from '@/types';
+import { isDemoMode, demoHistory } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,14 @@ function csvCell(value: string | number | null): string {
 }
 
 export async function GET(req: NextRequest) {
+  if (isDemoMode()) {
+    const header = ['Date','Reference','Provider','Payer','Employee','Verified Amount','Expected Amount','Result','Decision'];
+    const rows = demoHistory.items.map((r: Record<string, unknown>) =>
+      [r.createdAt, r.referenceMasked, r.provider, r.payerName, r.employeeName, r.verifiedAmount, r.expectedAmount, r.resultLevel, r.employeeDecision].map((v) => csvCell(v as string | number | null)).join(',')
+    );
+    const csv = [`# Demo export — ${demoHistory.total} records`, header.join(','), ...rows].join('\n');
+    return new Response(csv, { status: 200, headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="demo-history.csv"' } });
+  }
   try {
     const ctx = await requireBusiness();
     const sp = req.nextUrl.searchParams;

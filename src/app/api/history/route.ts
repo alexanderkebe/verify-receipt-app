@@ -3,10 +3,12 @@ import { NextRequest } from 'next/server';
 import { getHistory } from '@/lib/history';
 import { requireBusiness, ok, handleError } from '@/lib/api-helpers';
 import type { HistoryFilters, Provider, ResultLevel, EmployeeDecision } from '@/types';
+import { isDemoMode, demoHistory } from '@/lib/demo-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+  if (isDemoMode()) return ok(demoHistory);
   try {
     const ctx = await requireBusiness();
     const sp = req.nextUrl.searchParams;
