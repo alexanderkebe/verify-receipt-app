@@ -12,7 +12,7 @@ import prisma from '@/lib/prisma';
 import { AUTH_CONFIG } from '@/lib/constants';
 import { logAuditEvent, AuditActions } from '@/lib/audit';
 import type { UserRole } from '@/types';
-import { isDemoMode, DEMO_USER, DEMO_ADMIN_USER } from '@/lib/demo-data';
+import { isDemoMode, DEMO_USER, DEMO_MANAGER_USER, DEMO_EMPLOYEE_USER, DEMO_ADMIN_USER } from '@/lib/demo-data';
 
 class AuthError extends Error {}
 
@@ -30,9 +30,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Demo mode: accept hardcoded credentials, no DB required
         if (isDemoMode()) {
-          if (email === DEMO_ADMIN_USER.email && password === 'demo123') return DEMO_ADMIN_USER;
-          if (password === 'demo123') return DEMO_USER;
-          return null;
+          if (password !== 'demo123') return null;
+          if (email === DEMO_ADMIN_USER.email) return DEMO_ADMIN_USER;
+          if (email === DEMO_MANAGER_USER.email) return DEMO_MANAGER_USER;
+          if (email === DEMO_EMPLOYEE_USER.email) return DEMO_EMPLOYEE_USER;
+          return DEMO_USER; // any other email → owner
         }
 
         if (!email || !password) return null;

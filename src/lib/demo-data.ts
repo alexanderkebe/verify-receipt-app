@@ -24,6 +24,28 @@ export const DEMO_USER = {
   businessName: 'Addis Coffee House PLC',
 };
 
+export const DEMO_MANAGER_USER = {
+  id: 'demo-emp-1',
+  email: 'manager@addiscoffee.et',
+  name: 'Sara Tadesse',
+  fullName: 'Sara Tadesse',
+  role: 'MANAGER' as const,
+  businessId: 'demo-business-1',
+  branchId: null,
+  businessName: 'Addis Coffee House PLC',
+};
+
+export const DEMO_EMPLOYEE_USER = {
+  id: 'demo-emp-2',
+  email: 'cashier@addiscoffee.et',
+  name: 'Yonas Bekele',
+  fullName: 'Yonas Bekele',
+  role: 'EMPLOYEE' as const,
+  businessId: 'demo-business-1',
+  branchId: null,
+  businessName: 'Addis Coffee House PLC',
+};
+
 export const DEMO_ADMIN_USER = {
   id: 'demo-admin-1',
   email: 'admin@receiptguard.et',

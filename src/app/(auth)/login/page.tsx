@@ -50,16 +50,25 @@ function LoginForm() {
 
       {isDemo && (
         <div className="alert mb-4" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '12px 16px', fontSize: 13 }}>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>Demo credentials</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ opacity: 0.7 }}>Owner (dashboard)</span>
-              <span style={{ fontFamily: 'monospace' }}>any email · demo123</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ opacity: 0.7 }}>Platform admin</span>
-              <span style={{ fontFamily: 'monospace' }}>admin@receiptguard.et · demo123</span>
-            </div>
+          <p style={{ fontWeight: 600, marginBottom: 8 }}>Demo — all passwords are <span style={{ fontFamily: 'monospace' }}>demo123</span></p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {[
+              { role: 'Owner', email: 'owner@addiscoffee.et', note: 'full access' },
+              { role: 'Manager', email: 'manager@addiscoffee.et', note: 'no settings' },
+              { role: 'Employee', email: 'cashier@addiscoffee.et', note: 'verify only' },
+              { role: 'Platform Admin', email: 'admin@receiptguard.et', note: 'admin portal' },
+            ].map(({ role, email, note }) => (
+              <div key={role} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                <span style={{ opacity: 0.7, minWidth: 110 }}>{role} <span style={{ opacity: 0.5, fontSize: 11 }}>({note})</span></span>
+                <button
+                  type="button"
+                  style={{ fontFamily: 'monospace', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, textAlign: 'right' }}
+                  onClick={() => { setEmail(email); setPassword('demo123'); }}
+                >
+                  {email}
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}
