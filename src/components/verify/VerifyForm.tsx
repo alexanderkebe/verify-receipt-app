@@ -2,108 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
-import { PROVIDER_LABELS, type Provider, type VerificationResult } from '@/types';
-import { PROVIDER_REQUIRED_FIELDS } from '@/lib/constants';
+import type { VerificationResult } from '@/types';
 import ResultCard from './ResultCard';
-
-const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
-
-interface ParsedQr {
-  provider: Provider | null;
-  reference: string;
-  suffix?: string;
-}
-
-/**
- * Parse the QR code printed on Ethiopian payment receipts.
- * CBE receipts encode a URL like https://apps.cbe.com.et:100/?id=FT26123ABC1240001234
- * (12-char reference + 8-digit account suffix); Telebirr encodes a link to
- * transactioninfo.ethiotelecom.et/receipt/<ref>; others vary.
- */
-function parseReceiptQr(text: string): ParsedQr | null {
-  const raw = text.trim();
-  const lower = raw.toLowerCase();
-
-  const getParam = (names: string[]): string | null => {
-    try {
-      const url = new URL(raw);
-      for (const n of names) {
-        const v = url.searchParams.get(n);
-        if (v) return v.trim();
-      }
-      // Fall back to the last path segment
-      const seg = url.pathname.split('/').filter(Boolean).pop();
-      return seg?.trim() || null;
-    } catch {
-      return null;
-    }
-  };
-
-  // CBE — reference (FT…) with the account suffix appended
-  if (lower.includes('cbe.com.et')) {
-    const id = getParam(['id', 'ref', 'reference', 'trx']);
-    if (id) {
-      if (/^FT/i.test(id) && id.length > 12) {
-        return { provider: 'CBE', reference: id.slice(0, 12).toUpperCase(), suffix: id.slice(12) };
-      }
-      return { provider: 'CBE', reference: id.toUpperCase() };
-    }
-    return null;
-  }
-
-  // Telebirr
-  if (lower.includes('ethiotelecom') || lower.includes('telebirr')) {
-    const ref = getParam(['receiptno', 'receiptNo', 'ref', 'reference', 'id', 'trx']);
-    if (ref) return { provider: 'TELEBIRR', reference: ref.toUpperCase() };
-    return null;
-  }
-
-  // Dashen
-  if (lower.includes('dashen')) {
-    const ref = getParam(['id', 'ref', 'reference', 'trx', 'transactionid']);
-    if (ref) return { provider: 'DASHEN', reference: ref.toUpperCase() };
-    return null;
-  }
-
-  // Bank of Abyssinia
-  if (lower.includes('abyssinia') || lower.includes('boa')) {
-    const ref = getParam(['id', 'ref', 'reference', 'trx']);
-    if (ref) return { provider: 'ABYSSINIA', reference: ref.toUpperCase() };
-    return null;
-  }
-
-  // M-Pesa
-  if (lower.includes('mpesa') || lower.includes('m-pesa') || lower.includes('safaricom')) {
-    const ref = getParam(['id', 'ref', 'receipt', 'reference']);
-    if (ref) return { provider: 'MPESA', reference: ref.toUpperCase() };
-    return null;
-  }
-
-  // Unknown URL — try common parameter names
-  if (lower.startsWith('http')) {
-    const ref = getParam(['id', 'ref', 'reference', 'receipt', 'receiptno', 'trx', 'transactionid']);
-    if (ref && /^[A-Za-z0-9]{6,30}$/.test(ref)) {
-      return { provider: null, reference: ref.toUpperCase() };
-    }
-    return null;
-  }
-
-  // Plain text that looks like a transaction reference
-  if (/^[A-Za-z0-9]{6,30}$/.test(raw)) {
-    const upper = raw.toUpperCase();
-    const provider: Provider | null = upper.startsWith('FT') ? 'CBE' : null;
-    return { provider, reference: upper };
-  }
-
-  return null;
-}
 
 export default function VerifyForm() {
   const [mode, setMode] = useState<'scan' | 'manual' | 'upload'>('scan');
-  const [provider, setProvider] = useState<Provider>('CBE');
-  const [reference, setReference] = useState('');
-  const [suffix, setSuffix] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [input, setInput] = useState('');
   const [expectedAmount, setExpectedAmount] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
@@ -120,10 +24,6 @@ export default function VerifyForm() {
   const [decided, setDecided] = useState(false);
   const [decisionMsg, setDecisionMsg] = useState<string | null>(null);
 
-  const required = PROVIDER_REQUIRED_FIELDS[provider];
-  const needsSuffix = required.includes('suffix');
-  const needsPhone = required.includes('phoneNumber');
-
   function stopCamera() {
     scanningRef.current = false;
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -137,22 +37,16 @@ export default function VerifyForm() {
     setDecisionMsg(null);
   }
 
-  async function runVerification(input: {
-    provider: Provider;
-    reference: string;
-    suffix?: string;
-    phoneNumber?: string;
-  }) {
+  // Step 1: reference number or receipt URL → Step 2: check on the API →
+  // Step 3: the result card shows what the API returned.
+  async function runVerification(rawInput: string) {
     clearResultState();
     setLoading(true);
     const res = await fetch('/api/verify/manual', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        provider: input.provider,
-        reference: input.reference.trim(),
-        suffix: input.suffix || undefined,
-        phoneNumber: input.phoneNumber || undefined,
+        input: rawInput.trim(),
         expectedAmount: expectedAmount ? Number(expectedAmount) : undefined,
       }),
     });
@@ -166,40 +60,16 @@ export default function VerifyForm() {
   }
 
   function handleQrDetected(text: string) {
-    const parsed = parseReceiptQr(text);
-    if (!parsed) {
-      // Not a receipt QR — keep scanning, but tell the user
+    const t = text.trim();
+    const plausible = /^https?:\/\//i.test(t) || /^[A-Za-z0-9]{6,40}$/.test(t);
+    if (!plausible) {
       setScanNotice('QR code detected, but it does not look like a payment receipt. Keep trying or use manual entry.');
       scanningRef.current = true;
       return;
     }
-
     stopCamera();
-    const detectedProvider = parsed.provider ?? provider;
-    setProvider(detectedProvider);
-    setReference(parsed.reference);
-    if (parsed.suffix) setSuffix(parsed.suffix);
-
-    const req = PROVIDER_REQUIRED_FIELDS[detectedProvider];
-    const missingSuffix = req.includes('suffix') && !parsed.suffix;
-    const missingPhone = req.includes('phoneNumber');
-    if (!parsed.provider || missingSuffix || missingPhone) {
-      // Need a detail the QR didn't contain — hand off to the prefilled manual form
-      setMode('manual');
-      setScanNotice(null);
-      setError(
-        !parsed.provider
-          ? 'QR scanned — confirm the provider below and verify.'
-          : 'QR scanned — fill in the missing detail below and verify.',
-      );
-      return;
-    }
-
-    void runVerification({
-      provider: detectedProvider,
-      reference: parsed.reference,
-      suffix: parsed.suffix,
-    });
+    setInput(t);
+    void runVerification(t);
   }
 
   // Start/stop the camera + QR scan loop as the user enters/leaves scan mode
@@ -280,7 +150,7 @@ export default function VerifyForm() {
 
   async function verify(e: React.FormEvent) {
     e.preventDefault();
-    await runVerification({ provider, reference, suffix, phoneNumber });
+    await runVerification(input);
   }
 
   async function uploadVerify(e: React.FormEvent) {
@@ -325,9 +195,7 @@ export default function VerifyForm() {
   }
 
   function reset() {
-    setReference('');
-    setSuffix('');
-    setPhoneNumber('');
+    setInput('');
     setExpectedAmount('');
     setFile(null);
     setScanNotice(null);
@@ -443,7 +311,7 @@ export default function VerifyForm() {
                 )}
               </div>
               <span className="input-help">
-                Verification starts automatically as soon as the QR code is read.
+                Provider is detected automatically and verification starts as soon as the code is read.
               </span>
             </div>
           )}
@@ -495,56 +363,20 @@ export default function VerifyForm() {
       ) : (
         <form className="card card-padding" onSubmit={verify}>
           <div className="input-group mb-4">
-            <label className="input-label">Provider</label>
-            <select
-              className="input-field select-field"
-              value={provider}
-              onChange={(e) => setProvider(e.target.value as Provider)}
-            >
-              {PROVIDERS.map((p) => (
-                <option key={p} value={p}>
-                  {PROVIDER_LABELS[p]}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="input-group mb-4">
             <label className="input-label">
-              Transaction reference<span className="required">*</span>
+              Reference number or receipt link<span className="required">*</span>
             </label>
             <input
               className="input-field"
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-              placeholder="e.g. FT24351ABCD"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="e.g. FT24351ABCD or https://apps.cbe.com.et/?id=…"
               required
             />
+            <span className="input-help">
+              The payment provider is detected automatically. For CBE, pasting the receipt link verifies in one step.
+            </span>
           </div>
-
-          {needsSuffix && (
-            <div className="input-group mb-4">
-              <label className="input-label">Account suffix</label>
-              <input
-                className="input-field"
-                value={suffix}
-                onChange={(e) => setSuffix(e.target.value)}
-                placeholder={provider === 'CBE' ? '8-digit suffix' : '5-digit suffix'}
-              />
-            </div>
-          )}
-
-          {needsPhone && (
-            <div className="input-group mb-4">
-              <label className="input-label">Phone number</label>
-              <input
-                className="input-field"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="2519XXXXXXXX"
-              />
-            </div>
-          )}
 
           <div className="input-group mb-6">
             <label className="input-label">Expected amount (ETB)</label>

@@ -6,7 +6,7 @@
 // ============================================
 
 import { VERIFIER_API_KEY } from '@/lib/constants';
-import { verifyByReference, verifyByImage } from '@/lib/verifier-api';
+import { verifyByReference, verifyUniversal, verifyByImage } from '@/lib/verifier-api';
 import type { Provider, ResultLevel, NormalizedVerificationResult } from '@/types';
 
 export function hasLiveVerifier(): boolean {
@@ -23,12 +23,9 @@ interface LiveDemoInput {
 
 export async function performLiveDemoVerification(input: LiveDemoInput) {
   const start = Date.now();
-  const apiResult = await verifyByReference(
-    input.provider ?? 'CBE',
-    input.reference,
-    input.suffix,
-    input.phoneNumber,
-  );
+  const apiResult = input.provider
+    ? await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber)
+    : await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
   return toVerificationResult(apiResult, input.expectedAmount, start);
 }
 
@@ -73,6 +70,9 @@ function toVerificationResult(
     isDuplicate: false, // No history in demo mode
     duplicateInfo: null,
     transactionDate: apiResult.transactionDate,
+    receiptNumber: apiResult.receiptNumber,
+    fees: apiResult.fees,
+    apiDescription: apiResult.description,
     processingTimeMs: Date.now() - startTime,
     createdAt: new Date().toISOString(),
   };

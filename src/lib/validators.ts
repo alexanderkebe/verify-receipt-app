@@ -4,7 +4,7 @@
 // ============================================
 
 import { z } from 'zod';
-import { AUTH_CONFIG, PROVIDER_REFERENCE_PATTERNS } from '@/lib/constants';
+import { AUTH_CONFIG } from '@/lib/constants';
 
 const PROVIDERS = ['CBE', 'TELEBIRR', 'DASHEN', 'ABYSSINIA', 'CBE_BIRR', 'MPESA'] as const;
 
@@ -73,20 +73,12 @@ export const paymentAccountSchema = z.object({
 });
 
 // ---- Verification ----
-export const manualVerificationSchema = z
-  .object({
-    provider: providerSchema,
-    reference: z.string().trim().min(4, 'Reference is required'),
-    suffix: z.string().trim().optional(),
-    phoneNumber: z.string().trim().optional(),
-    expectedAmount: z.coerce.number().positive('Amount must be greater than zero').optional(),
-  })
-  .superRefine((val, ctx) => {
-    const pattern = PROVIDER_REFERENCE_PATTERNS[val.provider];
-    if (pattern && !pattern.pattern.test(val.reference)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['reference'], message: pattern.description });
-    }
-  });
+// A single free-form input: reference number or receipt URL.
+// Provider detection happens server-side / at the Verifier API.
+export const manualVerificationSchema = z.object({
+  input: z.string().trim().min(4, 'Enter a reference number or receipt link'),
+  expectedAmount: z.coerce.number().positive('Amount must be greater than zero').optional(),
+});
 export type ManualVerificationInput = z.infer<typeof manualVerificationSchema>;
 
 export const decisionSchema = z.object({

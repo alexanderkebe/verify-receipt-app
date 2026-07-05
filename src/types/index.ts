@@ -144,6 +144,10 @@ export interface VerificationResult {
   isDuplicate: boolean;
   duplicateInfo: DuplicateInfo | null;
   transactionDate: string | null;
+  // Extra details returned by the Verifier API, shown as-is
+  receiptNumber?: string | null;
+  fees?: number | null;
+  apiDescription?: string | null;
   processingTimeMs: number;
   createdAt: string;
 }

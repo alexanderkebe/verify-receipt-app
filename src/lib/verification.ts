@@ -6,7 +6,7 @@
 import prisma from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { hashReference, maskReference } from '@/lib/crypto';
-import { verifyByReference, verifyByImage } from '@/lib/verifier-api';
+import { verifyByReference, verifyUniversal, verifyByImage } from '@/lib/verifier-api';
 import { generateFraudAlerts } from '@/lib/fraud-detection';
 import { logAuditEvent, AuditActions } from '@/lib/audit';
 import type {
@@ -39,20 +39,16 @@ export async function performVerification(
   // 1. Check subscription limits
   await checkSubscriptionLimit(context.businessId);
 
-  // 2. Validate provider and reference format
-  const provider = input.provider || detectProviderFromReference(input.reference);
-
-  // 3. Check for duplicates BEFORE calling the API
+  // 2. Check for duplicates BEFORE calling the API
   const refHash = hashReference(input.reference);
   const duplicateInfo = await checkDuplicate(context.businessId, refHash);
 
-  // 4. Call the external Verifier API
-  const apiResult = await verifyByReference(
-    provider,
-    input.reference,
-    input.suffix,
-    input.phoneNumber,
-  );
+  // 3. Call the external Verifier API — when the provider is known, use its
+  //    dedicated endpoint; otherwise let the universal endpoint auto-detect.
+  const apiResult = input.provider
+    ? await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber)
+    : await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
+  const provider = apiResult.provider;
 
   // 5. Match recipient against registered business accounts
   const recipientMatch = await matchRecipient(
@@ -157,6 +153,9 @@ export async function performVerification(
     isDuplicate: duplicateInfo !== null,
     duplicateInfo,
     transactionDate: apiResult.transactionDate,
+    receiptNumber: apiResult.receiptNumber,
+    fees: apiResult.fees,
+    apiDescription: apiResult.description,
     processingTimeMs: processingTime,
     createdAt: verification.createdAt.toISOString(),
   };
@@ -257,6 +256,9 @@ export async function performImageVerification(
     isDuplicate: duplicateInfo !== null,
     duplicateInfo,
     transactionDate: apiResult.transactionDate,
+    receiptNumber: apiResult.receiptNumber,
+    fees: apiResult.fees,
+    apiDescription: apiResult.description,
     processingTimeMs: processingTime,
     createdAt: verification.createdAt.toISOString(),
   };
@@ -580,10 +582,3 @@ function classifyResult(
   };
 }
 
-function detectProviderFromReference(reference: string): Provider {
-  // Basic heuristic — the API's universal endpoint handles the actual detection
-  const ref = reference.toUpperCase();
-  if (ref.startsWith('FT') || ref.startsWith('CBE')) return 'CBE';
-  if (ref.length === 10 && /^\d+$/.test(ref)) return 'TELEBIRR';
-  return 'CBE'; // Default — the universal endpoint will sort it out
-}

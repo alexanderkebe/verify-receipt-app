@@ -6,6 +6,7 @@ import { requireBusiness, ok, fail, handleError } from '@/lib/api-helpers';
 import { extractRequestMeta } from '@/lib/audit';
 import { isDemoMode, makeDemoVerificationResult } from '@/lib/demo-data';
 import { hasLiveVerifier, performLiveDemoVerification } from '@/lib/demo-verification';
+import { parseVerificationInput } from '@/lib/receipt-input';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +20,14 @@ export async function POST(req: NextRequest) {
       if (!parsed.success) {
         return fail(Object.values(fieldErrors(parsed.error))[0] ?? 'Invalid input');
       }
-      const result = await performLiveDemoVerification(parsed.data);
+      const target = parseVerificationInput(parsed.data.input);
+      const result = await performLiveDemoVerification({
+        ...target,
+        expectedAmount: parsed.data.expectedAmount,
+      });
       return ok(result);
     }
-    return ok(makeDemoVerificationResult(body.reference ?? 'REF0000', body.provider ?? 'CBE', body.expectedAmount));
+    return ok(makeDemoVerificationResult(body.input ?? 'REF0000', 'CBE', body.expectedAmount));
   }
   try {
     const ctx = await requireBusiness();
@@ -32,13 +37,16 @@ export async function POST(req: NextRequest) {
       return fail(Object.values(fieldErrors(parsed.error))[0] ?? 'Invalid input');
     }
 
+    // Auto-detect the provider from the input (reference or receipt URL);
+    // unknown providers are resolved by the API's universal endpoint.
+    const target = parseVerificationInput(parsed.data.input);
+
     const meta = extractRequestMeta(req.headers);
     const result = await performVerification(
       {
-        provider: parsed.data.provider,
-        reference: parsed.data.reference,
-        suffix: parsed.data.suffix,
-        phoneNumber: parsed.data.phoneNumber,
+        provider: target.provider,
+        reference: target.reference,
+        suffix: target.suffix,
         expectedAmount: parsed.data.expectedAmount,
       },
       {
