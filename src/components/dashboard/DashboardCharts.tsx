@@ -23,20 +23,20 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={rows} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(216,207,188,0.12)" />
-        <XAxis dataKey="label" stroke="#D8CFBC" fontSize={12} />
-        <YAxis stroke="#D8CFBC" fontSize={12} allowDecimals={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+        <XAxis dataKey="label" stroke="#64748B" fontSize={12} />
+        <YAxis stroke="#64748B" fontSize={12} allowDecimals={false} />
         <Tooltip
           contentStyle={{
-            background: '#292A22',
-            border: '1px solid rgba(216,207,188,0.2)',
+            background: '#1E293B',
+            border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 8,
-            color: '#FFFBF4',
+            color: '#F1F5F9',
           }}
         />
-        <Line type="monotone" dataKey="total" name="Total" stroke="#FFFBF4" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="successful" name="Verified" stroke="#D8CFBC" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="failed" name="Issues" stroke="#565449" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="total" name="Total" stroke="#F5A623" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="successful" name="Verified" stroke="#64748B" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="failed" name="Issues" stroke="#EF4444" strokeWidth={2} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -55,13 +55,13 @@ export function ProviderChart({ data }: { data: ProviderStat[] }) {
             <Cell key={r.provider} fill={PROVIDER_COLORS[r.provider]} stroke="transparent" />
           ))}
         </Pie>
-        <Legend wrapperStyle={{ fontSize: 12, color: '#D8CFBC' }} />
+        <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
         <Tooltip
           contentStyle={{
-            background: '#292A22',
-            border: '1px solid rgba(216,207,188,0.2)',
+            background: '#1E293B',
+            border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 8,
-            color: '#FFFBF4',
+            color: '#F1F5F9',
           }}
         />
       </PieChart>
