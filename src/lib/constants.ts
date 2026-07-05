@@ -139,7 +139,7 @@ export const UPLOAD_CONFIG = {
 export const AUTH_CONFIG = {
   maxLoginAttempts: 5,
   lockoutDurationMinutes: 15,
-  sessionMaxAgeSeconds: 24 * 60 * 60, // 24 hours
+  sessionMaxAgeSeconds: 30 * 24 * 60 * 60, // 30 days — stay signed in
   verificationCodeExpMinutes: 15,
   resetTokenExpMinutes: 60,
   invitationExpDays: 7,

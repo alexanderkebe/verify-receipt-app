@@ -27,14 +27,11 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export const registerSchema = z
+const registerAccountSchema = z
   .object({
-    businessName: z.string().trim().min(2, 'Business name is required'),
     provider: providerSchema,
     accountHolderName: z.string().trim().min(2, 'Account holder name is required'),
     accountNumber: z.string().trim().min(4, 'Account or phone number is required'),
-    email: emailSchema,
-    password: passwordSchema,
   })
   .superRefine((val, ctx) => {
     // Mobile money providers use a phone number as the account number
@@ -48,7 +45,27 @@ export const registerSchema = z
       }
     }
   });
+
+export const registerSchema = z.object({
+  businessName: z.string().trim().min(2, 'Business name is required'),
+  ownerName: z.string().trim().min(2, 'Your name is required'),
+  email: emailSchema,
+  password: passwordSchema,
+  // Shared password employees will use to join this business
+  businessPassword: z.string().min(6, 'Business password must be at least 6 characters'),
+  // All payment accounts the business receives money with
+  accounts: z.array(registerAccountSchema).min(1, 'Add at least one payment account'),
+});
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const businessJoinSchema = z.object({
+  businessId: z.string().uuid('Select a business from the list'),
+  businessPassword: z.string().min(1, 'Business password is required'),
+  fullName: z.string().trim().min(2, 'Your full name is required'),
+  email: emailSchema,
+  password: passwordSchema,
+});
+export type BusinessJoinInput = z.infer<typeof businessJoinSchema>;
 
 // ---- Employees ----
 export const employeeSchema = z.object({

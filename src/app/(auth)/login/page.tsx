@@ -7,6 +7,11 @@ import { signIn } from 'next-auth/react';
 import styles from '../auth.module.css';
 
 const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+const SOCIALS = [
+  { id: 'google', label: 'Google', enabled: process.env.NEXT_PUBLIC_AUTH_GOOGLE === 'true' },
+  { id: 'facebook', label: 'Meta', enabled: process.env.NEXT_PUBLIC_AUTH_FACEBOOK === 'true' },
+  { id: 'apple', label: 'Apple', enabled: process.env.NEXT_PUBLIC_AUTH_APPLE === 'true' },
+].filter((s) => s.enabled);
 
 function LoginForm() {
   const router = useRouter();
@@ -77,6 +82,28 @@ function LoginForm() {
         <div className="alert alert-danger mb-4" role="alert">
           {error}
         </div>
+      )}
+
+      {SOCIALS.length > 0 && (
+        <>
+          <div className="flex gap-3 mb-4">
+            {SOCIALS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className="btn btn-secondary w-full"
+                onClick={() => signIn(s.id, { callbackUrl })}
+              >
+                Continue with {s.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 mb-4 text-xs text-muted">
+            <span style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+            or
+            <span style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+          </div>
+        </>
       )}
 
       <form className={styles.form} onSubmit={onSubmit}>

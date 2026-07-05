@@ -571,7 +571,10 @@ function classifyResult(
       (amountMatch.matches === true || amountMatch.matches === null)) {
     return {
       resultLevel: 'GREEN',
-      resultReason: 'Payment verified successfully. Recipient matches, amount is correct, and this receipt has not been previously accepted.',
+      resultReason:
+        amountMatch.matches === null
+          ? 'Payment verified and the recipient matches your business. Confirm the amount and transaction time shown below match what the customer paid.'
+          : 'Payment verified successfully. Recipient matches, amount is correct, and this receipt has not been previously accepted.',
     };
   }
 

@@ -142,6 +142,8 @@ model Business {
   logoUrl            String?
   status             BusinessStatus  @default(PENDING_VERIFICATION)
   preferredLanguage  String          @default("en")
+  // Shared password employees enter to join this business
+  joinPasswordHash   String?
   tosAcceptedAt      DateTime?
   emailVerifiedAt    DateTime?
   verificationCode   String?

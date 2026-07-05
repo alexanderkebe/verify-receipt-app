@@ -10,7 +10,15 @@ import { authConfig } from '@/auth.config';
 const { auth } = NextAuth(authConfig);
 
 // Routes accessible without a session
-const PUBLIC_PREFIXES = ['/login', '/register', '/forgot-password', '/verify-email', '/api/business/register'];
+const PUBLIC_PREFIXES = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/verify-email',
+  '/api/business/register',
+  '/api/business/join',
+  '/api/business/search',
+];
 const PUBLIC_EXACT = ['/'];
 
 // Authenticated areas

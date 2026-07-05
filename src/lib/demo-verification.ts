@@ -119,7 +119,10 @@ function classify(
 
   return {
     resultLevel: 'GREEN',
-    resultReason: 'Payment verified successfully against the provider. (Demo mode: recipient and duplicate checks require a registered business account.)',
+    resultReason:
+      amountMatches === null
+        ? 'Payment verified against the provider. Confirm the amount and transaction time shown below match what the customer paid.'
+        : 'Payment verified successfully against the provider.',
   };
 }
 
