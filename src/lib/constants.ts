@@ -6,7 +6,7 @@
 import type { Provider, SubscriptionTier } from '@/types';
 
 // ---- Verifier API Configuration ----
-export const VERIFIER_API_BASE_URL = process.env.VERIFIER_API_URL || 'https://verifier-api.onrender.com';
+export const VERIFIER_API_BASE_URL = process.env.VERIFIER_API_URL || 'https://verifyapi.leulzenebe.pro';
 export const VERIFIER_API_KEY = process.env.VERIFIER_API_KEY || '';
 
 // ---- Provider Endpoint Mapping ----

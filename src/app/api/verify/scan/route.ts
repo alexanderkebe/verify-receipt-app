@@ -6,6 +6,7 @@ import { storeReceiptImage, validateUpload } from '@/lib/image-storage';
 import { requireBusiness, ok, fail, handleError } from '@/lib/api-helpers';
 import { extractRequestMeta } from '@/lib/audit';
 import { isDemoMode, makeDemoVerificationResult } from '@/lib/demo-data';
+import { hasLiveVerifier, performLiveDemoImageVerification } from '@/lib/demo-verification';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,17 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData().catch(() => null);
     const expectedRaw = formData?.get('expectedAmount');
     const expectedAmount = expectedRaw ? Number(expectedRaw) : undefined;
-    // Simulate a short processing delay feeling
+    // With an API key configured, demo mode still runs real image OCR
+    // verification against the Verifier API — only persistence is skipped.
+    if (hasLiveVerifier()) {
+      const file = formData?.get('image');
+      if (!file || !(file instanceof File)) return fail('No image uploaded');
+      const validationError = validateUpload(file.type, file.size);
+      if (validationError) return fail(validationError);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const result = await performLiveDemoImageVerification(buffer, file.type, expectedAmount);
+      return ok(result);
+    }
     return ok(makeDemoVerificationResult('SCAN' + Date.now(), 'CBE', expectedAmount));
   }
   try {
