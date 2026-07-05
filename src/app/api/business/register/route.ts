@@ -1,7 +1,9 @@
 // ============================================
 // POST /api/business/register
-// Self-registration: Business + owner User + first
-// PaymentAccount + FREE Subscription, in one transaction.
+// Simple self-registration: business name, bank, account holder
+// name, account number, email and password. Creates the Business,
+// owner User, first PaymentAccount and FREE Subscription in one
+// transaction. Suffixes are derived from the account number.
 // ============================================
 
 import { NextRequest } from 'next/server';
@@ -19,7 +21,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   if (isDemoMode()) {
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-    return ok({ businessId: 'demo-business-1', email: body.ownerEmail ?? 'demo@addiscoffee.et' }, 201);
+    return ok({ businessId: 'demo-business-1', email: body.email ?? 'demo@addiscoffee.et' }, 201);
   }
   let body: unknown;
   try {
@@ -37,27 +39,32 @@ export async function POST(req: NextRequest) {
   // Uniqueness checks (friendly errors before hitting DB constraints)
   const [bizExists, ownerExists] = await Promise.all([
     prisma.business.findUnique({ where: { email: data.email }, select: { id: true } }),
-    prisma.user.findUnique({ where: { email: data.ownerEmail }, select: { id: true } }),
+    prisma.user.findUnique({ where: { email: data.email }, select: { id: true } }),
   ]);
-  if (bizExists) return fail('A business with this email already exists', 409);
-  if (ownerExists) return fail('An account with this owner email already exists', 409);
+  if (bizExists || ownerExists) return fail('An account with this email already exists', 409);
 
-  const passwordHash = await bcrypt.hash(data.ownerPassword, 10);
+  const passwordHash = await bcrypt.hash(data.password, 10);
+
+  const digits = data.accountNumber.replace(/[^0-9]/g, '');
+  // Derive the verification suffix from the account number
+  const suffix =
+    data.provider === 'CBE' ? digits.slice(-8) :
+    data.provider === 'ABYSSINIA' ? digits.slice(-5) :
+    null;
+  const isMobileMoney = data.provider === 'CBE_BIRR' || data.provider === 'TELEBIRR' || data.provider === 'MPESA';
+  const phoneNumber = isMobileMoney && /^(251|0)?9\d{8}$/.test(digits)
+    ? `251${digits.slice(-9)}`
+    : null;
 
   try {
     const business = await prisma.$transaction(async (tx) => {
       const biz = await tx.business.create({
         data: {
-          legalName: data.legalName,
-          tradingName: data.tradingName || null,
-          businessType: data.businessType,
-          sector: data.sector || null,
-          phone: data.phone,
+          legalName: data.businessName,
+          businessType: 'General',
+          phone: phoneNumber ?? '',
           email: data.email,
-          city: data.city || null,
-          region: data.region || null,
-          address: data.address || null,
-          status: 'ACTIVE', // self-registration, no manual approval (Q2)
+          status: 'ACTIVE', // self-registration, no manual approval
           tosAcceptedAt: new Date(),
           subscription: {
             create: {
@@ -72,9 +79,8 @@ export async function POST(req: NextRequest) {
       await tx.user.create({
         data: {
           businessId: biz.id,
-          fullName: data.ownerName,
-          email: data.ownerEmail,
-          phone: data.phone,
+          fullName: data.accountHolderName,
+          email: data.email,
           passwordHash,
           jobTitle: 'Owner',
           role: 'OWNER',
@@ -82,21 +88,18 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      if (data.account) {
-        await tx.paymentAccount.create({
-          data: {
-            businessId: biz.id,
-            provider: data.account.provider,
-            accountHolderName: data.account.accountHolderName,
-            accountNumberEncrypted: encrypt(data.account.accountNumber),
-            accountNumberMasked: maskAccountNumber(data.account.accountNumber),
-            suffix: data.account.suffix || null,
-            phoneNumber: data.account.phoneNumber || null,
-            nickname: data.account.nickname || null,
-            status: 'ACTIVE',
-          },
-        });
-      }
+      await tx.paymentAccount.create({
+        data: {
+          businessId: biz.id,
+          provider: data.provider,
+          accountHolderName: data.accountHolderName,
+          accountNumberEncrypted: encrypt(data.accountNumber),
+          accountNumberMasked: maskAccountNumber(data.accountNumber),
+          suffix,
+          phoneNumber,
+          status: 'ACTIVE',
+        },
+      });
 
       return biz;
     });
@@ -110,7 +113,7 @@ export async function POST(req: NextRequest) {
       ...extractRequestMeta(req.headers),
     });
 
-    return ok({ businessId: business.id, email: data.ownerEmail }, 201);
+    return ok({ businessId: business.id, email: data.email }, 201);
   } catch (error) {
     if (error instanceof z.ZodError) return fail('Invalid input');
     console.error('Registration failed:', error);

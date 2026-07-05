@@ -27,34 +27,27 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export const registerSchema = z.object({
-  // Step 1 — business
-  legalName: z.string().trim().min(2, 'Business legal name is required'),
-  tradingName: z.string().trim().optional(),
-  businessType: z.string().trim().min(1, 'Business type is required'),
-  sector: z.string().trim().optional(),
-  phone: z.string().trim().min(7, 'Business phone is required'),
-  email: emailSchema,
-  city: z.string().trim().optional(),
-  region: z.string().trim().optional(),
-  address: z.string().trim().optional(),
-  // Step 2 — first payment account
-  account: z
-    .object({
-      provider: providerSchema,
-      accountHolderName: z.string().trim().min(2, 'Account holder name is required'),
-      accountNumber: z.string().trim().min(4, 'Account number is required'),
-      suffix: z.string().trim().optional(),
-      phoneNumber: z.string().trim().optional(),
-      nickname: z.string().trim().optional(),
-    })
-    .optional(),
-  // Step 3 — owner account
-  ownerName: z.string().trim().min(2, 'Your full name is required'),
-  ownerEmail: emailSchema,
-  ownerPassword: passwordSchema,
-  tosAccepted: z.literal(true, { errorMap: () => ({ message: 'You must accept the terms of service' }) }),
-});
+export const registerSchema = z
+  .object({
+    businessName: z.string().trim().min(2, 'Business name is required'),
+    provider: providerSchema,
+    accountHolderName: z.string().trim().min(2, 'Account holder name is required'),
+    accountNumber: z.string().trim().min(4, 'Account or phone number is required'),
+    email: emailSchema,
+    password: passwordSchema,
+  })
+  .superRefine((val, ctx) => {
+    // Mobile money providers use a phone number as the account number
+    if (val.provider === 'CBE_BIRR' || val.provider === 'TELEBIRR') {
+      if (!/^(\+?251|0)?9\d{8}$/.test(val.accountNumber.replace(/\s/g, ''))) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['accountNumber'],
+          message: 'Enter a valid Ethiopian phone number for this provider',
+        });
+      }
+    }
+  });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 // ---- Employees ----

@@ -49,7 +49,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string (not needed in demo mode) |
+| `DATABASE_URL` | Supabase "Transaction pooler" URI (port 6543) with `?pgbouncer=true&connection_limit=1` |
+| `DIRECT_URL` | Supabase "Session pooler" URI (port 5432) — used by `prisma db push` |
 | `NEXTAUTH_SECRET` / `AUTH_SECRET` | Auth secret (32+ chars) |
 | `VERIFIER_API_URL` | Verifier API base URL (default: `https://verifyapi.leulzenebe.pro`) |
 | `VERIFIER_API_KEY` | API key — get one free at [verify.leul.et](https://verify.leul.et) |
@@ -62,13 +63,19 @@ With `DEMO_MODE=true` the app runs without a database: login with one-click demo
 
 **Receipt verification is still real** when `VERIFIER_API_KEY` is set — references are checked live against the provider via the Verifier API. Without a key, verification results are mocked too.
 
-### Full (database) mode
+### Full (database) mode — Supabase
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. In the project's **Connect** dialog copy the pooler URIs into `.env`/`.env.local` as `DATABASE_URL` (transaction pooler, port 6543) and `DIRECT_URL` (session pooler, port 5432).
+3. Then:
 
 ```bash
-npm run db:push    # create schema
-npm run db:seed    # seed demo data
+npm run db:push    # create schema in Supabase
+npm run db:seed    # optional: seed test accounts
 npm run dev
 ```
+
+Sign-up is one simple form: bank, account holder name, account number, business name, email, password.
 
 ## Deployment (Vercel)
 
