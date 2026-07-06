@@ -201,37 +201,6 @@ export async function verifyUniversal(
   }
 }
 
-// ---- Image Verification ----
-export async function verifyByImage(
-  imageBuffer: Buffer,
-  mimeType: string,
-): Promise<NormalizedVerificationResult> {
-  try {
-    const formData = new FormData();
-    const blob = new Blob([new Uint8Array(imageBuffer)], { type: mimeType });
-    formData.append('image', blob, `receipt.${mimeType.split('/')[1]}`);
-
-    const response = await fetch(`${VERIFIER_API_BASE_URL}/verify-image`, {
-      method: 'POST',
-      headers: {
-        'x-api-key': VERIFIER_API_KEY,
-      },
-      body: formData,
-      signal: AbortSignal.timeout(VERIFICATION_CONFIG.apiTimeoutMs * 2), // Image takes longer
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const provider = detectProvider(data);
-      return normalizeResponse(provider, 'IMAGE', data);
-    }
-
-    return createErrorResult('CBE', 'IMAGE', 'ERROR', 'Image verification failed');
-  } catch {
-    return createErrorResult('CBE', 'IMAGE', 'TIMEOUT', 'Image verification timed out');
-  }
-}
-
 // ---- Helpers ----
 
 function buildRequestBody(

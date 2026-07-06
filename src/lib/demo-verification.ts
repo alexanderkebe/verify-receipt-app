@@ -6,7 +6,7 @@
 // ============================================
 
 import { VERIFIER_API_KEY } from '@/lib/constants';
-import { verifyByReference, verifyUniversal, verifyByImage } from '@/lib/verifier-api';
+import { verifyByReference, verifyUniversal } from '@/lib/verifier-api';
 import type { Provider, ResultLevel, NormalizedVerificationResult } from '@/types';
 
 export function hasLiveVerifier(): boolean {
@@ -27,16 +27,6 @@ export async function performLiveDemoVerification(input: LiveDemoInput) {
     ? await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber)
     : await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
   return toVerificationResult(apiResult, input.expectedAmount, start);
-}
-
-export async function performLiveDemoImageVerification(
-  imageBuffer: Buffer,
-  mimeType: string,
-  expectedAmount?: number,
-) {
-  const start = Date.now();
-  const apiResult = await verifyByImage(imageBuffer, mimeType);
-  return toVerificationResult(apiResult, expectedAmount, start);
 }
 
 function toVerificationResult(

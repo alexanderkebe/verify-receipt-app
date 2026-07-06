@@ -6,7 +6,7 @@
 import prisma from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { hashReference, maskReference } from '@/lib/crypto';
-import { verifyByReference, verifyUniversal, verifyByImage, createErrorResult } from '@/lib/verifier-api';
+import { verifyByReference, verifyUniversal, createErrorResult } from '@/lib/verifier-api';
 import { generateFraudAlerts } from '@/lib/fraud-detection';
 import { logAuditEvent, AuditActions } from '@/lib/audit';
 import type {
@@ -155,109 +155,6 @@ export async function performVerification(
     recipientMatches: recipientMatch.matches,
     amountMatches: amountMatch.matches,
     expectedAmount: input.expectedAmount ?? null,
-    verifiedAmount: apiResult.amount,
-    currency: apiResult.currency,
-    isDuplicate: duplicateInfo !== null,
-    duplicateInfo,
-    transactionDate: apiResult.transactionDate,
-    receiptNumber: apiResult.receiptNumber,
-    fees: apiResult.fees,
-    apiDescription: apiResult.description,
-    processingTimeMs: processingTime,
-    createdAt: verification.createdAt.toISOString(),
-  };
-}
-
-/**
- * Image-based verification
- */
-export async function performImageVerification(
-  imageBuffer: Buffer,
-  mimeType: string,
-  expectedAmount: number | undefined,
-  context: VerificationContext,
-): Promise<VerificationResult> {
-  const startTime = Date.now();
-
-  await checkSubscriptionLimit(context.businessId);
-
-  const apiResult = await verifyByImage(imageBuffer, mimeType);
-
-  // If image verification succeeded and we got a reference, do the full flow
-  if (apiResult.verificationStatus === 'VERIFIED' && apiResult.reference && apiResult.reference !== 'IMAGE') {
-    return performVerification(
-      {
-        provider: apiResult.provider,
-        reference: apiResult.reference,
-        expectedAmount,
-      },
-      context,
-    );
-  }
-
-  // Otherwise return the image result directly
-  const refHash = hashReference(apiResult.reference || `IMG_${Date.now()}`);
-  const recipientMatch = await matchRecipient(
-    context.businessId,
-    context.branchId,
-    apiResult.provider,
-    apiResult,
-  );
-  const amountMatch = compareAmounts(expectedAmount, apiResult.amount);
-  const duplicateInfo = apiResult.reference ? await checkDuplicate(context.businessId, refHash) : null;
-
-  const { resultLevel, resultReason } = classifyResult(
-    apiResult,
-    recipientMatch,
-    amountMatch,
-    duplicateInfo !== null,
-  );
-
-  const processingTime = Date.now() - startTime;
-
-  const verification = await prisma.receiptVerification.create({
-    data: {
-      businessId: context.businessId,
-      branchId: context.branchId,
-      employeeId: context.employeeId,
-      matchedAccountId: recipientMatch.accountId,
-      provider: apiResult.provider,
-      referenceHash: refHash,
-      referenceMasked: maskReference(apiResult.reference || 'IMAGE'),
-      expectedAmount,
-      verifiedAmount: apiResult.amount,
-      currency: apiResult.currency,
-      payerName: apiResult.payerName,
-      recipientName: apiResult.recipientName,
-      recipientAccountMasked: apiResult.recipientAccountMasked,
-      recipientMatches: recipientMatch.matches,
-      amountMatches: amountMatch.matches,
-      isDuplicate: duplicateInfo !== null,
-      verificationStatus: apiResult.verificationStatus,
-      transactionStatus: apiResult.transactionStatus,
-      resultLevel,
-      apiResponseDurationMs: processingTime,
-      rawApiResponse: apiResult.rawResponse as unknown as Prisma.InputJsonValue,
-      transactionDate: apiResult.transactionDate ? new Date(apiResult.transactionDate) : null,
-    },
-  });
-
-  await incrementVerificationCount(context.businessId);
-
-  return {
-    id: verification.id,
-    provider: apiResult.provider,
-    verificationStatus: apiResult.verificationStatus,
-    transactionStatus: apiResult.transactionStatus,
-    resultLevel,
-    resultReason,
-    referenceMasked: maskReference(apiResult.reference || 'IMAGE'),
-    payerName: apiResult.payerName,
-    recipientName: apiResult.recipientName,
-    recipientAccountMasked: apiResult.recipientAccountMasked,
-    recipientMatches: recipientMatch.matches,
-    amountMatches: amountMatch.matches,
-    expectedAmount: expectedAmount ?? null,
     verifiedAmount: apiResult.amount,
     currency: apiResult.currency,
     isDuplicate: duplicateInfo !== null,

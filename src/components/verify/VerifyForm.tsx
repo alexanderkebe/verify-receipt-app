@@ -19,6 +19,7 @@ export default function VerifyForm() {
   const [scanNotice, setScanNotice] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
+  const [extractStatus, setExtractStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [decided, setDecided] = useState(false);
@@ -153,22 +154,27 @@ export default function VerifyForm() {
     await runVerification(input);
   }
 
+  // The photo is processed on-device: QR decode first, then OCR.
+  // Only the extracted reference/link is sent to the server.
   async function uploadVerify(e: React.FormEvent) {
     e.preventDefault();
     if (!file) return;
-    clearResultState();
-    setLoading(true);
-    const fd = new FormData();
-    fd.append('image', file);
-    if (expectedAmount) fd.append('expectedAmount', expectedAmount);
-    const res = await fetch('/api/verify/scan', { method: 'POST', body: fd });
-    const json = await res.json();
-    setLoading(false);
-    if (!res.ok || !json.success) {
-      setError(json.error || 'Verification failed.');
-      return;
+    setError(null);
+    try {
+      const { extractReceiptData } = await import('@/lib/image-extract');
+      const extracted = await extractReceiptData(file, setExtractStatus);
+      setExtractStatus(null);
+      if (!extracted) {
+        setError(
+          'Could not find a QR code or reference number in this photo. Try a sharper photo that includes the QR code, or type the reference manually.',
+        );
+        return;
+      }
+      await runVerification(extracted.input);
+    } catch {
+      setExtractStatus(null);
+      setError('Could not read this image. Try another photo or use manual entry.');
     }
-    setResult(json.data as VerificationResult);
   }
 
   async function decide(decision: 'ACCEPTED' | 'REJECTED' | 'ESCALATED') {
@@ -335,14 +341,16 @@ export default function VerifyForm() {
       ) : mode === 'upload' ? (
         <form className="card card-padding" onSubmit={uploadVerify}>
           <div className="input-group mb-4">
-            <label className="input-label">Receipt image or PDF</label>
+            <label className="input-label">Receipt photo or screenshot</label>
             <input
               className="input-field"
               type="file"
-              accept="image/jpeg,image/png,image/webp,application/pdf"
+              accept="image/*"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
-            <span className="input-help">JPEG, PNG, WebP, or PDF up to 10MB.</span>
+            <span className="input-help">
+              The QR code or reference number is read on your device — the photo is never uploaded.
+            </span>
           </div>
           <div className="input-group mb-6">
             <label className="input-label">Expected amount (ETB)</label>
@@ -356,8 +364,17 @@ export default function VerifyForm() {
               placeholder="Optional — enables amount matching"
             />
           </div>
-          <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading || !file}>
-            {loading ? <span className="spinner spinner-sm" /> : 'Verify image'}
+          {extractStatus && (
+            <div className="alert alert-info mb-4" style={{ alignItems: 'center' }}>
+              <span className="spinner spinner-sm" /> {extractStatus}
+            </div>
+          )}
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg w-full"
+            disabled={loading || !file || Boolean(extractStatus)}
+          >
+            {loading || extractStatus ? <span className="spinner spinner-sm" /> : 'Verify receipt'}
           </button>
         </form>
       ) : (
