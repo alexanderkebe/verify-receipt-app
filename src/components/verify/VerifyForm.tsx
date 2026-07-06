@@ -21,6 +21,8 @@ export default function VerifyForm() {
   const scanningRef = useRef(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
+  // Bumped to restart the camera (e.g. after a failed verification)
+  const [scanEpoch, setScanEpoch] = useState(0);
 
   const [loading, setLoading] = useState(false);
   const [extractStatus, setExtractStatus] = useState<string | null>(null);
@@ -54,39 +56,47 @@ export default function VerifyForm() {
   async function runVerification(rawInput: string) {
     clearResultState();
     setLoading(true);
-    const res = await fetch('/api/verify/manual', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        input: rawInput.trim(),
-        expectedAmount: expectedAmount ? Number(expectedAmount) : undefined,
-      }),
-    });
-    const json = await res.json();
-    setLoading(false);
-    if (!res.ok || !json.success) {
-      setError(json.error || 'Verification failed.');
-      return;
+    try {
+      const res = await fetch('/api/verify/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input: rawInput.trim(),
+          expectedAmount: expectedAmount ? Number(expectedAmount) : undefined,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        setError(json.error || 'Verification failed. Please try again.');
+        setScanEpoch((e) => e + 1); // restart the camera if we're on the scan tab
+        return;
+      }
+      setResult(json.data as VerificationResult);
+    } catch {
+      setError('Could not reach the server. Check your connection and try again.');
+      setScanEpoch((e) => e + 1);
+    } finally {
+      setLoading(false);
     }
-    setResult(json.data as VerificationResult);
   }
 
-  function handleQrDetected(text: string) {
+  /** Returns true when the QR was accepted and verification started. */
+  function handleQrDetected(text: string): boolean {
     const t = text.trim();
     const parsed = findReceiptReference(t);
     if (!parsed) {
       // Couldn't find a reference in the QR — surface the raw content so the
       // user can read it out / retype, and keep scanning.
       const preview = t.length > 70 ? `${t.slice(0, 70)}…` : t;
-      setScanNotice(
-        `Scanned a QR code but couldn't find a receipt reference in it. It contained: “${preview}”. Use “Photo / upload” or “Manual entry” with the transaction number printed on the receipt.`,
-      );
-      scanningRef.current = true;
-      return;
+      const msg = `Scanned a QR code but couldn't find a receipt reference in it. It contained: “${preview}”. Use “Photo / upload” or “Manual entry” with the transaction number printed on the receipt.`;
+      // Functional update so re-detecting the same QR every frame doesn't re-render
+      setScanNotice((prev) => (prev === msg ? prev : msg));
+      return false;
     }
     stopCamera();
     setInput(parsed.reference);
     void runVerification(t);
+    return true;
   }
 
   // Start/stop the camera + QR scan loop as the user enters/leaves scan mode
@@ -121,11 +131,12 @@ export default function VerifyForm() {
           inversionAttempts: frame % 2 === 0 ? 'dontInvert' : 'onlyInvert',
         });
         frame++;
-        if (code?.data) {
+        if (code?.data && handleQrDetected(code.data)) {
+          // Accepted — camera stopped, verification in flight
           scanningRef.current = false;
-          handleQrDetected(code.data);
           return;
         }
+        // Unreadable/unparseable QR: keep scanning
       }
       rafId = requestAnimationFrame(tick);
     };
@@ -167,7 +178,7 @@ export default function VerifyForm() {
       stopCamera();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, result]);
+  }, [mode, result, scanEpoch]);
 
   function openScanTab() {
     setCameraError(null);
