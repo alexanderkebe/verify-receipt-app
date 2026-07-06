@@ -90,24 +90,35 @@ export default function VerifyForm() {
     let rafId = 0;
     const canvas = document.createElement('canvas');
 
+    let frame = 0;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
     const tick = () => {
       if (cancelled || !scanningRef.current) return;
       const video = videoRef.current;
-      if (video && video.readyState >= 2 && video.videoWidth) {
-        // Downscale for faster decoding
-        const scale = Math.min(1, 640 / video.videoWidth);
-        canvas.width = Math.round(video.videoWidth * scale);
-        canvas.height = Math.round(video.videoHeight * scale);
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(image.data, image.width, image.height, { inversionAttempts: 'dontInvert' });
-          if (code?.data) {
-            scanningRef.current = false;
-            handleQrDetected(code.data);
-            return;
-          }
+      if (ctx && video && video.readyState >= 2 && video.videoWidth) {
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        // Crop to the centre square (where the scan frame guides the user) and
+        // read it at native resolution. Dense QRs (e.g. Telebirr) need the extra
+        // module resolution that downscaling the whole frame would destroy.
+        const cropSize = Math.round(Math.min(vw, vh) * 0.8);
+        const sx = Math.round((vw - cropSize) / 2);
+        const sy = Math.round((vh - cropSize) / 2);
+        canvas.width = cropSize;
+        canvas.height = cropSize;
+        ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, cropSize, cropSize);
+        const image = ctx.getImageData(0, 0, cropSize, cropSize);
+        // Alternate inversion mode each frame so both dark- and light-background
+        // QR codes are covered without doubling per-frame work.
+        const code = jsQR(image.data, image.width, image.height, {
+          inversionAttempts: frame % 2 === 0 ? 'dontInvert' : 'onlyInvert',
+        });
+        frame++;
+        if (code?.data) {
+          scanningRef.current = false;
+          handleQrDetected(code.data);
+          return;
         }
       }
       rafId = requestAnimationFrame(tick);
@@ -117,7 +128,7 @@ export default function VerifyForm() {
       try {
         if (!navigator.mediaDevices?.getUserMedia) throw new Error('unsupported');
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
           audio: false,
         });
         if (cancelled) {
