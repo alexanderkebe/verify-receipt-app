@@ -6,7 +6,7 @@
 import prisma from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { hashReference, maskReference } from '@/lib/crypto';
-import { verifyByReference, verifyUniversal, verifyByImage } from '@/lib/verifier-api';
+import { verifyByReference, verifyUniversal, verifyByImage, createErrorResult } from '@/lib/verifier-api';
 import { generateFraudAlerts } from '@/lib/fraud-detection';
 import { logAuditEvent, AuditActions } from '@/lib/audit';
 import type {
@@ -45,9 +45,16 @@ export async function performVerification(
 
   // 3. Call the external Verifier API — when the provider is known, use its
   //    dedicated endpoint; otherwise let the universal endpoint auto-detect.
-  const apiResult = input.provider
-    ? await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber)
-    : await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
+  //    CBE references typed without a suffix fall back to the business's own
+  //    registered CBE account suffixes (the receiver can query with theirs).
+  let apiResult: NormalizedVerificationResult;
+  if (input.provider === 'CBE' && !input.suffix) {
+    apiResult = await verifyCbeWithRegisteredSuffix(context.businessId, input.reference);
+  } else if (input.provider) {
+    apiResult = await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber);
+  } else {
+    apiResult = await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
+  }
   const provider = apiResult.provider;
 
   // 5. Match recipient against registered business accounts
@@ -356,6 +363,41 @@ export async function recordOverride(
 // ============================================
 // Internal Helper Functions
 // ============================================
+
+/**
+ * CBE receipt lookups require the 8-digit account suffix of either party.
+ * When a cashier types just the FT reference, try the suffixes of the
+ * business's own registered CBE accounts — payments to the business can
+ * always be retrieved with the receiving account's suffix.
+ */
+async function verifyCbeWithRegisteredSuffix(
+  businessId: string,
+  reference: string,
+): Promise<NormalizedVerificationResult> {
+  const accounts = await prisma.paymentAccount.findMany({
+    where: { businessId, provider: 'CBE', status: 'ACTIVE', NOT: { suffix: null } },
+    select: { suffix: true },
+    take: 3,
+  });
+  const suffixes = [...new Set(accounts.map((a) => a.suffix).filter((s): s is string => !!s))];
+
+  if (suffixes.length === 0) {
+    return createErrorResult(
+      'CBE',
+      reference,
+      'ERROR',
+      'CBE receipts need the receipt link or QR code. Scan the QR on the receipt or paste the full receipt link — or register your CBE account under Payment Accounts so lookups can use it automatically.',
+    );
+  }
+
+  let last: NormalizedVerificationResult | null = null;
+  for (const suffix of suffixes) {
+    const result = await verifyByReference('CBE', reference, suffix);
+    if (result.verificationStatus === 'VERIFIED') return result;
+    last = result;
+  }
+  return last!;
+}
 
 async function checkSubscriptionLimit(businessId: string): Promise<void> {
   const subscription = await prisma.subscription.findUnique({

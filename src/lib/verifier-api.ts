@@ -244,10 +244,18 @@ function buildRequestBody(
 
   switch (provider) {
     case 'CBE':
-      if (suffix) body.suffix = suffix;
+      // The dedicated endpoint expects `accountSuffix` (last 8 digits);
+      // `suffix` is included as well for older API versions.
+      if (suffix) {
+        body.accountSuffix = suffix;
+        body.suffix = suffix;
+      }
       break;
     case 'ABYSSINIA':
-      if (suffix) body.suffix = suffix;
+      if (suffix) {
+        body.accountSuffix = suffix;
+        body.suffix = suffix;
+      }
       break;
     case 'CBE_BIRR':
       body.receipt = reference;
@@ -347,7 +355,7 @@ function detectProvider(data: Record<string, unknown>): Provider {
   return 'CBE'; // Default
 }
 
-function createErrorResult(
+export function createErrorResult(
   provider: Provider,
   reference: string,
   status: VerificationStatus,
