@@ -140,10 +140,9 @@ export async function verifyByReference(
     } catch (error) {
       lastError = error as Error;
       if ((error as Error).name === 'AbortError' || (error as Error).name === 'TimeoutError') {
+        // A timeout already consumed the whole time budget — don't retry
         recordFailure(provider);
-        if (attempt === VERIFICATION_CONFIG.maxRetries) {
-          return createErrorResult(provider, reference, 'TIMEOUT', 'Verification timed out. The payment provider may be temporarily unavailable.');
-        }
+        return createErrorResult(provider, reference, 'TIMEOUT', 'Verification timed out. The payment provider may be temporarily unavailable — try again in a moment.');
       }
     }
   }

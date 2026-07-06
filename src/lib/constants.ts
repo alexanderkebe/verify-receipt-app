@@ -148,8 +148,10 @@ export const AUTH_CONFIG = {
 
 // ---- Verification Config ----
 export const VERIFICATION_CONFIG = {
-  apiTimeoutMs: 15000,
-  maxRetries: 2,
+  // Telebirr lookups regularly take 30s+ (the provider's receipt site is
+  // slow from abroad) — keep this under the route's 60s maxDuration.
+  apiTimeoutMs: 45000,
+  maxRetries: 1,
   retryDelayMs: 1000,
   circuitBreakerThreshold: 5,
   circuitBreakerResetMs: 60000,

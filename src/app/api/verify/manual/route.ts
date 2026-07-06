@@ -9,6 +9,8 @@ import { hasLiveVerifier, performLiveDemoVerification } from '@/lib/demo-verific
 import { parseVerificationInput } from '@/lib/receipt-input';
 
 export const dynamic = 'force-dynamic';
+// Telebirr verifications can take 30-45s — allow the function to wait
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   if (isDemoMode()) {
