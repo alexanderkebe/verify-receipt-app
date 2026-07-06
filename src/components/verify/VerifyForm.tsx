@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
 import type { VerificationResult } from '@/types';
+import { findReceiptReference } from '@/lib/receipt-input';
 import ResultCard from './ResultCard';
 
 export default function VerifyForm() {
@@ -72,14 +73,19 @@ export default function VerifyForm() {
 
   function handleQrDetected(text: string) {
     const t = text.trim();
-    const plausible = /^https?:\/\//i.test(t) || /^[A-Za-z0-9]{6,40}$/.test(t);
-    if (!plausible) {
-      setScanNotice('QR code detected, but it does not look like a payment receipt. Keep trying or use manual entry.');
+    const parsed = findReceiptReference(t);
+    if (!parsed) {
+      // Couldn't find a reference in the QR — surface the raw content so the
+      // user can read it out / retype, and keep scanning.
+      const preview = t.length > 70 ? `${t.slice(0, 70)}…` : t;
+      setScanNotice(
+        `Scanned a QR code but couldn't find a receipt reference in it. It contained: “${preview}”. Use “Photo / upload” or “Manual entry” with the transaction number printed on the receipt.`,
+      );
       scanningRef.current = true;
       return;
     }
     stopCamera();
-    setInput(t);
+    setInput(parsed.reference);
     void runVerification(t);
   }
 
