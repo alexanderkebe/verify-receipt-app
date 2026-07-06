@@ -23,9 +23,6 @@ export default function VerifyForm() {
   const [scanNotice, setScanNotice] = useState<string | null>(null);
   // Bumped to restart the camera (e.g. after a failed verification)
   const [scanEpoch, setScanEpoch] = useState(0);
-  // Guards the live-frame OCR fallback (app-only QRs, e.g. telebirr in-app)
-  const ocrBusyRef = useRef(false);
-  const ocrLastTriedRef = useRef(0);
 
   const [loading, setLoading] = useState(false);
   const [extractStatus, setExtractStatus] = useState<string | null>(null);
@@ -88,49 +85,20 @@ export default function VerifyForm() {
     const t = text.trim();
     const parsed = findReceiptReference(t);
     if (!parsed) {
-      // App-only QR (e.g. telebirr's in-app receipt QR is verifiable only by
-      // the telebirr SuperApp). The transaction number is printed on the
-      // receipt though — read it from the camera frame with OCR instead.
+      // App-only QR: telebirr's in-app receipt QR is an encrypted payload
+      // that only the telebirr SuperApp can verify. Point the cashier at the
+      // paths that work — a screenshot/photo of the receipt, or typing the
+      // printed transaction number.
       const msg =
-        'This QR code can only be verified inside its own app — reading the printed transaction number instead. Hold the receipt steady so the transaction number is inside the frame.';
+        'This is a telebirr in-app QR — it can only be verified inside the telebirr app. Take a photo of the receipt or type the transaction number instead.';
       // Functional update so re-detecting the same QR every frame doesn't re-render
       setScanNotice((prev) => (prev === msg ? prev : msg));
-      void tryFrameOcr();
       return false;
     }
     stopCamera();
     setInput(parsed.reference);
     void runVerification(t);
     return true;
-  }
-
-  /** One-shot OCR of the current camera frame (throttled) to find the printed reference */
-  async function tryFrameOcr() {
-    const now = Date.now();
-    if (ocrBusyRef.current || now - ocrLastTriedRef.current < 5000) return;
-    ocrBusyRef.current = true;
-    ocrLastTriedRef.current = now;
-    try {
-      const video = videoRef.current;
-      if (!video || !video.videoWidth) return;
-      // Full frame — the reference is usually printed near, not inside, the QR
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d')?.drawImage(video, 0, 0);
-      const { ocrCanvasForReference } = await import('@/lib/image-extract');
-      const ref = await ocrCanvasForReference(canvas);
-      if (ref && scanningRef.current) {
-        stopCamera();
-        setScanNotice(null);
-        setInput(ref);
-        void runVerification(ref);
-      }
-    } catch {
-      // OCR is best-effort; the notice already points to manual entry
-    } finally {
-      ocrBusyRef.current = false;
-    }
   }
 
   // Start/stop the camera + QR scan loop as the user enters/leaves scan mode
@@ -394,7 +362,33 @@ export default function VerifyForm() {
             </div>
           )}
 
-          {scanNotice && <div className="alert alert-warning mb-4">{scanNotice}</div>}
+          {scanNotice && (
+            <div className="mb-4">
+              <div className="alert alert-warning mb-2">{scanNotice}</div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="btn btn-primary w-full"
+                  onClick={() => {
+                    setScanNotice(null);
+                    setMode('upload');
+                  }}
+                >
+                  📷 Photo mode
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary w-full"
+                  onClick={() => {
+                    setScanNotice(null);
+                    setMode('manual');
+                  }}
+                >
+                  ⌨ Manual entry
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="input-group">
             <label className="input-label">Expected amount (ETB)</label>
