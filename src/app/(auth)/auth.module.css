@@ -135,8 +135,26 @@
 @media (max-width: 920px) {
   .authShell {
     grid-template-columns: 1fr;
+    min-height: 100dvh;
   }
   .authAside {
     display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .authMain {
+    padding: var(--space-5) var(--space-4);
+    align-items: flex-start;
+    padding-top: var(--space-8);
+  }
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+  .formTitle {
+    font-size: var(--font-size-xl);
+  }
+  .formSubtitle {
+    margin-bottom: var(--space-6);
   }
 }

@@ -149,6 +149,66 @@
   transform: translateY(0);
 }
 
+/* ---- FAQ ---- */
+.faqList {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.faqItem {
+  background: var(--color-surface);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+.faqQuestion {
+  padding: var(--space-4) var(--space-5);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+  padding-right: var(--space-10);
+  user-select: none;
+}
+.faqQuestion::-webkit-details-marker {
+  display: none;
+}
+.faqQuestion::after {
+  content: '+';
+  position: absolute;
+  right: var(--space-5);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-accent);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-normal);
+  transition: transform var(--transition-fast);
+}
+.faqItem[open] .faqQuestion::after {
+  content: '−';
+}
+.faqAnswer {
+  padding: 0 var(--space-5) var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+/* ---- CTA banner ---- */
+.ctaBanner {
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(245, 166, 35, 0.12), transparent 60%),
+    var(--color-surface);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-12) var(--space-6);
+  margin: var(--space-8) 0;
+}
+
 .footer {
   display: flex;
   align-items: center;
@@ -160,9 +220,74 @@
   gap: var(--space-4);
 }
 
+/* ---- Touch devices: no hover, so feature details are always visible ---- */
+@media (hover: none) {
+  .featureCard {
+    min-height: 0;
+  }
+  .featureDetail {
+    max-height: none;
+    margin-top: var(--space-3);
+    opacity: 1;
+    transform: none;
+  }
+  .providerTab:hover,
+  .stepCard:hover,
+  .featureCard:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* ---- Mobile ---- */
 @media (max-width: 768px) {
+  .landing {
+    padding: 0 var(--space-4);
+  }
+  .nav {
+    height: 60px;
+  }
+  .brand {
+    font-size: var(--font-size-base);
+    gap: var(--space-2);
+  }
+  .brandIcon {
+    width: 32px;
+    height: 32px;
+  }
+  .hero {
+    padding: var(--space-10) 0 var(--space-10);
+  }
   .heroTitle {
     font-size: var(--font-size-4xl);
+  }
+  .heroSubtitle {
+    font-size: var(--font-size-base);
+  }
+  .section {
+    padding: var(--space-10) 0;
+  }
+  .sectionTitle {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--space-6);
+  }
+  .footer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .heroTitle {
+    font-size: var(--font-size-3xl);
+  }
+  .hero :global(.btn-lg) {
+    width: 100%;
+  }
+  .ctaBanner {
+    padding: var(--space-8) var(--space-4);
   }
 }
 

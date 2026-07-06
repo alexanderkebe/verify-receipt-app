@@ -27,16 +27,21 @@ export default function DashboardChrome({ user, children }: Props) {
 
   return (
     <>
-      <Sidebar role={user.role} open={sidebarOpen} />
+      <Sidebar role={user.role} open={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
+      {sidebarOpen && (
+        <button
+          className="sidebar-backdrop"
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       <header className="top-header">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
           <button
-            className="btn btn-icon btn-ghost"
+            className="btn btn-icon btn-ghost mobile-only"
             onClick={() => setSidebarOpen((o) => !o)}
             aria-label="Toggle navigation"
-            style={{ display: 'none' }}
-            data-mobile-toggle
           >
             <Icon name="menu" />
           </button>
@@ -47,12 +52,12 @@ export default function DashboardChrome({ user, children }: Props) {
           <div className="dropdown">
             <button className="flex items-center gap-2 btn btn-ghost" onClick={() => setMenuOpen((o) => !o)}>
               <span className="avatar avatar-sm">{initials(user.name)}</span>
-              <span className="text-sm font-medium">{user.name}</span>
+              <span className="text-sm font-medium hide-mobile">{user.name}</span>
             </button>
             {menuOpen && (
               <div className="dropdown-menu">
                 <div className="dropdown-item" style={{ pointerEvents: 'none', opacity: 0.7 }}>
-                  {ROLE_LABELS[user.role]}
+                  {user.name} — {ROLE_LABELS[user.role]}
                 </div>
                 <hr className="divider" style={{ margin: '4px 0' }} />
                 <button className="dropdown-item" onClick={() => signOut({ callbackUrl: '/login' })}>
@@ -66,12 +71,6 @@ export default function DashboardChrome({ user, children }: Props) {
       </header>
 
       <main className="main-content">{children}</main>
-
-      <style>{`
-        @media (max-width: 768px) {
-          [data-mobile-toggle] { display: inline-flex !important; }
-        }
-      `}</style>
     </>
   );
 }

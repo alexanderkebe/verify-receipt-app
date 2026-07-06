@@ -8,13 +8,21 @@ import Icon from '@/components/ui/Icon';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
 
-export default function Sidebar({ role, open }: { role: UserRole; open: boolean }) {
+export default function Sidebar({
+  role,
+  open,
+  onNavigate,
+}: {
+  role: UserRole;
+  open: boolean;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const items = DASHBOARD_NAV_ITEMS.filter((item) => item.roles.includes(role));
 
   return (
     <aside className={`sidebar ${open ? 'open' : ''}`}>
-      <Link href="/dashboard" className="sidebar-logo">
+      <Link href="/dashboard" className="sidebar-logo" onClick={onNavigate}>
         <span className="sidebar-logo-icon">R</span>
         <span className="sidebar-logo-text">{APP_NAME}</span>
       </Link>
@@ -22,7 +30,12 @@ export default function Sidebar({ role, open }: { role: UserRole; open: boolean 
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
-            <Link key={item.href} href={item.href} className={`sidebar-link ${active ? 'active' : ''}`}>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`sidebar-link ${active ? 'active' : ''}`}
+              onClick={onNavigate}
+            >
               <Icon name={item.icon} className="link-icon" size={20} />
               <span>{item.label}</span>
             </Link>
