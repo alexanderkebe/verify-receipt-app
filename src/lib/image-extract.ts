@@ -6,6 +6,7 @@
 // ============================================
 
 import jsQR from 'jsqr';
+import { findReceiptReference } from '@/lib/receipt-input';
 
 export interface ExtractionResult {
   /** The text to verify: a receipt URL (from QR) or a bare reference */
@@ -73,12 +74,11 @@ export function findReferenceInText(text: string): string | null {
   return null;
 }
 
-async function tryOcr(img: HTMLImageElement, onStatus?: (s: string) => void): Promise<string | null> {
-  onStatus?.('Reading text from the photo…');
+/** OCR a canvas and hunt for a payment reference in the recognised text */
+export async function ocrCanvasForReference(canvas: HTMLCanvasElement): Promise<string | null> {
   const { createWorker } = await import('tesseract.js');
   const worker = await createWorker('eng');
   try {
-    const canvas = drawToCanvas(img, 2000);
     const {
       data: { text },
     } = await worker.recognize(canvas);
@@ -90,7 +90,9 @@ async function tryOcr(img: HTMLImageElement, onStatus?: (s: string) => void): Pr
 
 /**
  * Extract a verifiable reference from a receipt photo, entirely on-device.
- * Order: QR code (contains the full receipt link with suffix) → OCR text.
+ * Order: QR code → OCR text. A QR that decodes but holds an app-only
+ * payload (e.g. telebirr's in-app receipt QR, which only the telebirr
+ * SuperApp can verify) falls through to OCR of the printed reference.
  */
 export async function extractReceiptData(
   file: File,
@@ -100,9 +102,10 @@ export async function extractReceiptData(
   const img = await loadImage(file);
 
   const qr = tryDecodeQr(img);
-  if (qr) return { input: qr, source: 'qr' };
+  if (qr && findReceiptReference(qr)) return { input: qr, source: 'qr' };
 
-  const ref = await tryOcr(img, onStatus);
+  onStatus?.('Reading the reference number from the photo…');
+  const ref = await ocrCanvasForReference(drawToCanvas(img, 2000));
   if (ref) return { input: ref, source: 'ocr' };
 
   return null;
