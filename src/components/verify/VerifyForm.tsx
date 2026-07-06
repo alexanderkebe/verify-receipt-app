@@ -10,6 +10,9 @@ export default function VerifyForm() {
   const [input, setInput] = useState('');
   const [expectedAmount, setExpectedAmount] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   // QR scanner state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -36,6 +39,13 @@ export default function VerifyForm() {
     setResult(null);
     setDecided(false);
     setDecisionMsg(null);
+  }
+
+  function pickFile(picked: File | null) {
+    setError(null);
+    if (filePreview) URL.revokeObjectURL(filePreview);
+    setFile(picked);
+    setFilePreview(picked ? URL.createObjectURL(picked) : null);
   }
 
   // Step 1: reference number or receipt URL → Step 2: check on the API →
@@ -203,7 +213,7 @@ export default function VerifyForm() {
   function reset() {
     setInput('');
     setExpectedAmount('');
-    setFile(null);
+    pickFile(null);
     setScanNotice(null);
     setCameraError(null);
     clearResultState();
@@ -261,7 +271,7 @@ export default function VerifyForm() {
           className={`tab ${mode === 'upload' ? 'active' : ''}`}
           onClick={() => setMode('upload')}
         >
-          Upload image
+          Photo / upload
         </button>
       </div>
 
@@ -342,12 +352,65 @@ export default function VerifyForm() {
         <form className="card card-padding" onSubmit={uploadVerify}>
           <div className="input-group mb-4">
             <label className="input-label">Receipt photo or screenshot</label>
+            {/* Hidden inputs: one opens the camera on phones, one the gallery */}
             <input
-              className="input-field"
+              ref={cameraInputRef}
               type="file"
               accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
             />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+            />
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="btn btn-secondary w-full"
+                onClick={() => cameraInputRef.current?.click()}
+              >
+                📷 Take photo
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary w-full"
+                onClick={() => galleryInputRef.current?.click()}
+              >
+                🖼 Choose image
+              </button>
+            </div>
+            {filePreview && (
+              <div className="flex items-center gap-3 mt-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={filePreview}
+                  alt="Selected receipt"
+                  style={{
+                    width: 64,
+                    height: 64,
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    border: '1px solid var(--color-border)',
+                  }}
+                />
+                <div style={{ minWidth: 0 }}>
+                  <div className="text-sm font-medium truncate">{file?.name ?? 'Photo'}</div>
+                  <button
+                    type="button"
+                    className="text-xs"
+                    style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', padding: 0 }}
+                    onClick={() => pickFile(null)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
             <span className="input-help">
               The QR code or reference number is read on your device — the photo is never uploaded.
             </span>
