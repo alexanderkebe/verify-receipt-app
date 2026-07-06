@@ -91,9 +91,11 @@ export const paymentAccountSchema = z.object({
 
 // ---- Verification ----
 // A single free-form input: reference number or receipt URL.
-// Provider detection happens server-side / at the Verifier API.
+// Provider is auto-detected server-side / at the Verifier API,
+// but the user can pin it explicitly from the manual form.
 export const manualVerificationSchema = z.object({
   input: z.string().trim().min(4, 'Enter a reference number or receipt link'),
+  provider: providerSchema.optional(),
   expectedAmount: z.coerce.number().positive('Amount must be greater than zero').optional(),
 });
 export type ManualVerificationInput = z.infer<typeof manualVerificationSchema>;

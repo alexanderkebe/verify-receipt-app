@@ -2,13 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
-import type { VerificationResult } from '@/types';
+import { PROVIDER_LABELS, type Provider, type VerificationResult } from '@/types';
 import { findReceiptReference } from '@/lib/receipt-input';
 import ResultCard from './ResultCard';
+
+const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 
 export default function VerifyForm() {
   const [mode, setMode] = useState<'scan' | 'manual' | 'upload'>('scan');
   const [input, setInput] = useState('');
+  // '' = auto-detect; otherwise the provider the user pinned on the manual form
+  const [manualProvider, setManualProvider] = useState<'' | Provider>('');
   const [expectedAmount, setExpectedAmount] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -53,7 +57,7 @@ export default function VerifyForm() {
 
   // Step 1: reference number or receipt URL → Step 2: check on the API →
   // Step 3: the result card shows what the API returned.
-  async function runVerification(rawInput: string) {
+  async function runVerification(rawInput: string, provider?: Provider) {
     clearResultState();
     setLoading(true);
     try {
@@ -62,6 +66,7 @@ export default function VerifyForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           input: rawInput.trim(),
+          provider,
           expectedAmount: expectedAmount ? Number(expectedAmount) : undefined,
         }),
       });
@@ -191,7 +196,7 @@ export default function VerifyForm() {
 
   async function verify(e: React.FormEvent) {
     e.preventDefault();
-    await runVerification(input);
+    await runVerification(input, manualProvider || undefined);
   }
 
   // The photo is processed on-device: QR decode first, then OCR.
@@ -499,6 +504,22 @@ export default function VerifyForm() {
       ) : (
         <form className="card card-padding" onSubmit={verify}>
           <div className="input-group mb-4">
+            <label className="input-label">Payment provider</label>
+            <select
+              className="input-field select-field"
+              value={manualProvider}
+              onChange={(e) => setManualProvider(e.target.value as '' | Provider)}
+            >
+              <option value="">Auto-detect</option>
+              {PROVIDERS.map((p) => (
+                <option key={p} value={p}>
+                  {PROVIDER_LABELS[p]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="input-group mb-4">
             <label className="input-label">
               Reference number or receipt link<span className="required">*</span>
             </label>
@@ -506,11 +527,17 @@ export default function VerifyForm() {
               className="input-field"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="e.g. FT24351ABCD or https://apps.cbe.com.et/?id=…"
+              placeholder="e.g. FT24351ABCD or DG61L8C6XB"
               required
             />
             <span className="input-help">
-              The payment provider is detected automatically. For CBE, pasting the receipt link verifies in one step.
+              {(() => {
+                if (manualProvider) return `Will verify with ${PROVIDER_LABELS[manualProvider]}.`;
+                const detected = input.trim().length >= 6 ? findReceiptReference(input)?.provider : undefined;
+                return detected
+                  ? `Detected: ${PROVIDER_LABELS[detected]}. Pick a provider above if this is wrong.`
+                  : 'Provider is detected automatically — or pick it above. Receipt links (CBE/Telebirr) verify in one step.';
+              })()}
             </span>
           </div>
 

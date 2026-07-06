@@ -179,7 +179,7 @@ export async function verifyUniversal(
 
     if (response.ok) {
       const data = await response.json();
-      const provider = detectProvider(data);
+      const provider = detectProvider(data, reference);
       return normalizeResponse(provider, reference, data);
     }
 
@@ -312,7 +312,7 @@ function extractNumber(data: any, keys: string[]): number | null {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-function detectProvider(data: Record<string, unknown>): Provider {
+function detectProvider(data: Record<string, unknown>, reference?: string): Provider {
   const providerHint = String(data.provider || data.bank || data.service || '').toUpperCase();
   if (providerHint.includes('CBE') && !providerHint.includes('BIRR')) return 'CBE';
   if (providerHint.includes('TELEBIRR')) return 'TELEBIRR';
@@ -320,6 +320,17 @@ function detectProvider(data: Record<string, unknown>): Provider {
   if (providerHint.includes('ABYSSINIA')) return 'ABYSSINIA';
   if (providerHint.includes('CBE BIRR') || providerHint.includes('CBEBIRR')) return 'CBE_BIRR';
   if (providerHint.includes('MPESA') || providerHint.includes('M-PESA')) return 'MPESA';
+
+  // No explicit provider field — infer from the response shape. The universal
+  // endpoint's payloads name the provider in their field names/values
+  // (e.g. Telebirr responses carry `payerTelebirrNo`).
+  const blob = JSON.stringify(data).toUpperCase();
+  if (blob.includes('TELEBIRR')) return 'TELEBIRR';
+  if (blob.includes('MPESA') || blob.includes('M-PESA')) return 'MPESA';
+  if (blob.includes('DASHEN')) return 'DASHEN';
+  if (blob.includes('ABYSSINIA')) return 'ABYSSINIA';
+  if (blob.includes('CBEBIRR') || blob.includes('CBE BIRR') || blob.includes('CBE_BIRR')) return 'CBE_BIRR';
+  if (reference && /^FT/i.test(reference)) return 'CBE';
   return 'CBE'; // Default
 }
 

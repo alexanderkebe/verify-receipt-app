@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
       const target = parseVerificationInput(parsed.data.input);
       const result = await performLiveDemoVerification({
         ...target,
+        // URL-derived provider wins; otherwise honour the user's selection
+        provider: target.provider ?? parsed.data.provider,
         expectedAmount: parsed.data.expectedAmount,
       });
       return ok(result);
@@ -46,7 +48,8 @@ export async function POST(req: NextRequest) {
     const meta = extractRequestMeta(req.headers);
     const result = await performVerification(
       {
-        provider: target.provider,
+        // URL-derived provider wins; otherwise honour the user's selection
+        provider: target.provider ?? parsed.data.provider,
         reference: target.reference,
         suffix: target.suffix,
         expectedAmount: parsed.data.expectedAmount,
