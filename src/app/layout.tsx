@@ -14,6 +14,18 @@ export const metadata: Metadata = {
     'Verify customer payment receipts in seconds, detect duplicates and fraud, and manage your team — built for Ethiopian businesses.',
   applicationName: APP_NAME,
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      {
+        url: '/icon-light.png',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: '/icon-dark.png',
+        media: '(prefers-color-scheme: dark)',
+      },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
