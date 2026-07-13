@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from './ThemeProvider';
-import Icon from './Icon';
+import { Sun, Moon } from 'lucide-react';
 
 interface ThemeToggleProps {
   className?: string;
@@ -42,7 +42,11 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
           transition: 'transform var(--transition-spring)',
         }}
       >
-        <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={20} />
+        {theme === 'dark' ? (
+          <Sun size={20} style={{ color: 'var(--color-accent)' }} />
+        ) : (
+          <Moon size={20} />
+        )}
       </span>
     </button>
   );
