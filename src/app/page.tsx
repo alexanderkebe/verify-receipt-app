@@ -14,7 +14,7 @@ const PROVIDER_LOGOS: Record<Provider, string> = {
   DASHEN: '/dashen_bank bank logo .png',
   ABYSSINIA: '/abyssinia icon.png',
   CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
-  MPESA: '/m-pesa logo and icon.png',
+  MPESA: '/m-pesa icon.png',
 };
 
 const STEPS = [
