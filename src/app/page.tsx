@@ -2,6 +2,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import { SUBSCRIPTION_CONFIG } from '@/lib/constants';
 import { PROVIDER_LABELS, type Provider, type SubscriptionTier } from '@/types';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
@@ -86,6 +87,7 @@ export default function Home() {
           {APP_NAME}
         </Link>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link href="/login" className="btn btn-ghost">
             Sign in
           </Link>

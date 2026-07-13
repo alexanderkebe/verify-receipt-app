@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signOut } from 'next-auth/react';
 import Sidebar from './Sidebar';
 import Icon from '@/components/ui/Icon';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import { ROLE_LABELS, type UserRole } from '@/types';
 
 interface Props {
@@ -49,6 +50,7 @@ export default function DashboardChrome({ user, children }: Props) {
         </div>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <div className="dropdown">
             <button className="flex items-center gap-2 btn btn-ghost" onClick={() => setMenuOpen((o) => !o)}>
               <span className="avatar avatar-sm">{initials(user.name)}</span>

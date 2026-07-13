@@ -1,11 +1,15 @@
 import Link from 'next/link';
 import styles from './auth.module.css';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={styles.authShell}>
+      <div style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 100 }}>
+        <ThemeToggle />
+      </div>
       <div className={styles.authAside}>
         <Link href="/" className={styles.brand}>
           <span className={styles.brandIcon}>R</span>
