@@ -11,7 +11,7 @@ const TIERS = Object.keys(SUBSCRIPTION_CONFIG) as SubscriptionTier[];
 const PROVIDER_LOGOS: Record<Provider, string> = {
   CBE: '/Commercial Bank Of Ethiopia (PNG) @Izuki Labs.png',
   TELEBIRR: '/Telebirr icon.png',
-  DASHEN: '/dashen_bank bank logo .png',
+  DASHEN: '/dashen_bank bank icon.png',
   ABYSSINIA: '/abyssinia icon.png',
   CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
   MPESA: '/m-pesa icon.png',
