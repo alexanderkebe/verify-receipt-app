@@ -8,6 +8,15 @@ const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 const TIERS = Object.keys(SUBSCRIPTION_CONFIG) as SubscriptionTier[];
 
+const PROVIDER_LOGOS: Record<Provider, string> = {
+  CBE: '/Commercial Bank Of Ethiopia (PNG) @Izuki Labs.png',
+  TELEBIRR: '/Telebirr icon.png',
+  DASHEN: '/dashen_bank bank logo .png',
+  ABYSSINIA: '/abyssinia icon.png',
+  CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
+  MPESA: '/m-pesa logo and icon.png',
+};
+
 const STEPS = [
   { n: '1', title: 'Register', text: 'Create your business account in minutes.' },
   { n: '2', title: 'Add accounts', text: 'Register the accounts customers pay into.' },
@@ -118,8 +127,28 @@ export default function Home() {
         </div>
         <div className={styles.providers}>
           {PROVIDERS.map((p) => (
-            <span key={p} className={`badge badge-neutral ${styles.providerTab}`}>
-              {PROVIDER_LABELS[p]}
+            <span
+              key={p}
+              className={`badge badge-neutral ${styles.providerTab}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 12px',
+                borderRadius: '9999px',
+              }}
+            >
+              <img
+                src={PROVIDER_LOGOS[p]}
+                alt={`${PROVIDER_LABELS[p]} logo`}
+                style={{
+                  height: '18px',
+                  width: 'auto',
+                  objectFit: 'contain',
+                  display: 'inline-block',
+                }}
+              />
+              <span>{PROVIDER_LABELS[p]}</span>
             </span>
           ))}
         </div>
