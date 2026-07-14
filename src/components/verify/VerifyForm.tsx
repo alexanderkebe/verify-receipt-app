@@ -291,7 +291,7 @@ export default function VerifyForm() {
 
   if (result) {
     return (
-      <div style={{ maxWidth: 560, margin: '0 auto' }}>
+      <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : ''}>
         <ResultCard result={result} />
 
         {decisionMsg && (
@@ -357,7 +357,7 @@ export default function VerifyForm() {
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }}>
+    <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : ''}>
       {/* Selected Provider Banner */}
       <div className="selected-provider-banner">
         <div className="selected-provider-info">
@@ -412,7 +412,16 @@ export default function VerifyForm() {
       {error && <div className="alert alert-danger mb-4">{error}</div>}
 
       {mode === 'scan' ? (
-        <div className="card card-padding">
+        <div className="card card-padding scan-card">
+          {selectedProvider === 'CBE' && (
+            <div className="cbe-scanner-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={PROVIDER_LOGOS.CBE} alt="CBE" style={{ height: '28px', objectFit: 'contain' }} />
+              <span style={{ fontSize: '9px', color: '#c08e51', letterSpacing: '0.08em', marginTop: '4px', textTransform: 'uppercase', fontWeight: 600 }}>
+                The bank you can always rely on!
+              </span>
+            </div>
+          )}
           {cameraError ? (
             <div className="alert alert-danger mb-4">{cameraError}</div>
           ) : (
