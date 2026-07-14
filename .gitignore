@@ -44,3 +44,8 @@ next-env.d.ts
 
 # local claude settings
 .claude/
+
+# design inspiration / reference screenshots
+public/*inspo*/
+public/dashin/
+public/mpesa/
