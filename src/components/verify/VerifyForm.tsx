@@ -13,7 +13,7 @@ const PROVIDER_LOGOS: Record<Provider, string> = {
   TELEBIRR: '/Telebirr (SVG) @Izuki Labs.svg',
   DASHEN: '/dashen_bank bank logo .png',
   ABYSSINIA: '/abyssinia logo.png',
-  CBE_BIRR: '/CBE Birr (SVG) @Izuki Labs.svg',
+  CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
   MPESA: '/m-pesa logo and icon.png',
 };
 
