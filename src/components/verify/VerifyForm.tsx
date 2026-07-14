@@ -12,7 +12,7 @@ const PROVIDER_LOGOS: Record<Provider, string> = {
   CBE: '/Commercial Bank Of Ethiopia (SVG) @Izuki Labs.svg',
   TELEBIRR: '/Telebirr (SVG) @Izuki Labs.svg',
   DASHEN: '/dashen_bank bank logo .png',
-  ABYSSINIA: '/abyssinia logo.png',
+  ABYSSINIA: '/abyssinia-white-icon.png',
   CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
   MPESA: '/m-pesa logo and icon.png',
 };
@@ -291,7 +291,7 @@ export default function VerifyForm() {
 
   if (result) {
     return (
-      <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : selectedProvider === 'CBE_BIRR' ? 'cbe_birr-theme' : selectedProvider === 'TELEBIRR' ? 'telebirr-theme' : ''}>
+      <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : selectedProvider === 'CBE_BIRR' ? 'cbe_birr-theme' : selectedProvider === 'TELEBIRR' ? 'telebirr-theme' : selectedProvider === 'DASHEN' ? 'dashen-theme' : selectedProvider === 'ABYSSINIA' ? 'abyssinia-theme' : ''}>
         <ResultCard result={result} />
 
         {decisionMsg && (
@@ -357,9 +357,9 @@ export default function VerifyForm() {
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : selectedProvider === 'CBE_BIRR' ? 'cbe_birr-theme' : selectedProvider === 'TELEBIRR' ? 'telebirr-theme' : ''}>
+    <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : selectedProvider === 'CBE_BIRR' ? 'cbe_birr-theme' : selectedProvider === 'TELEBIRR' ? 'telebirr-theme' : selectedProvider === 'DASHEN' ? 'dashen-theme' : selectedProvider === 'ABYSSINIA' ? 'abyssinia-theme' : ''}>
       {/* Selected Provider Banner */}
-      {['CBE', 'CBE_BIRR', 'TELEBIRR'].includes(selectedProvider) ? (
+      {['CBE', 'CBE_BIRR', 'TELEBIRR', 'DASHEN', 'ABYSSINIA'].includes(selectedProvider) ? (
         <div className="cbe-header-bar">
           <button
             type="button"
@@ -375,9 +375,9 @@ export default function VerifyForm() {
             </svg>
           </button>
           <span className="cbe-header-title">
-            {selectedProvider === 'CBE' ? 'CBE Verification' : selectedProvider === 'CBE_BIRR' ? 'CBE Birr Verification' : 'telebirr Verification'}
+            {selectedProvider === 'CBE' ? 'CBE Verification' : selectedProvider === 'CBE_BIRR' ? 'CBE Birr Verification' : selectedProvider === 'TELEBIRR' ? 'telebirr Verification' : selectedProvider === 'DASHEN' ? 'Dashen Verification' : 'Abyssinia Verification'}
           </span>
-          {/* Transparent Brand Logo directly on purple/green background */}
+          {/* Transparent Brand Logo directly on purple/green/blue background */}
           <img src={PROVIDER_LOGOS[selectedProvider]} alt={selectedProvider} style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
         </div>
       ) : (
@@ -436,12 +436,12 @@ export default function VerifyForm() {
 
       {mode === 'scan' ? (
         <div className="card card-padding scan-card">
-          {['CBE', 'CBE_BIRR', 'TELEBIRR'].includes(selectedProvider) && (
+          {['CBE', 'CBE_BIRR', 'TELEBIRR', 'DASHEN', 'ABYSSINIA'].includes(selectedProvider) && (
             <div className="cbe-scanner-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={PROVIDER_LOGOS[selectedProvider]} alt={selectedProvider} style={{ height: '28px', objectFit: 'contain' }} />
-              <span style={{ fontSize: '9px', color: selectedProvider === 'TELEBIRR' ? '#ffd54f' : '#c08e51', letterSpacing: '0.08em', marginTop: '4px', textTransform: 'uppercase', fontWeight: 600 }}>
-                {selectedProvider === 'TELEBIRR' ? 'ONE APP FOR ALL YOUR NEEDS!' : 'The bank you can always rely on!'}
+              <span style={{ fontSize: '9px', color: selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#ffd54f' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51', letterSpacing: '0.08em', marginTop: '4px', textTransform: 'uppercase', fontWeight: 600 }}>
+                {selectedProvider === 'TELEBIRR' ? 'ONE APP FOR ALL YOUR NEEDS!' : selectedProvider === 'DASHEN' ? 'ALWAYS AHEAD!' : selectedProvider === 'ABYSSINIA' ? 'THE CHOICE FOR ALL!' : 'The bank you can always rely on!'}
               </span>
             </div>
           )}
@@ -493,10 +493,10 @@ export default function VerifyForm() {
                 )}
               </div>
 
-              {['CBE', 'CBE_BIRR', 'TELEBIRR'].includes(selectedProvider) && (
+              {['CBE', 'CBE_BIRR', 'TELEBIRR', 'DASHEN', 'ABYSSINIA'].includes(selectedProvider) && (
                 <div className="cbe-scanner-actions" style={{ display: 'flex', justifyContent: 'space-around', margin: '1.25rem 0' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#D4145A' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="18" cy="5" r="3"></circle>
                       <circle cx="6" cy="12" r="3"></circle>
                       <circle cx="18" cy="19" r="3"></circle>
@@ -510,14 +510,14 @@ export default function VerifyForm() {
                       navigator.clipboard.writeText(input);
                     }
                   }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#D4145A' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                     </svg>
                     <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 500 }}>Copy Link</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#D4145A' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="7 10 12 15 17 10"></polyline>
                       <line x1="12" y1="15" x2="12" y2="3"></line>

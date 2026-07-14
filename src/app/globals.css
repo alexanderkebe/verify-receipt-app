@@ -1656,12 +1656,14 @@ ul, ol {
   }
 }
 
-/* ---- Brand App-Inspired Themes (CBE, CBE Birr, Telebirr) ---- */
+/* ---- Brand App-Inspired Themes (CBE, CBE Birr, Telebirr, Dashen, Abyssinia) ---- */
 
 /* Header Bars */
 .cbe-theme .cbe-header-bar,
 .cbe_birr-theme .cbe-header-bar,
-.telebirr-theme .cbe-header-bar {
+.telebirr-theme .cbe-header-bar,
+.dashen-theme .cbe-header-bar,
+.abyssinia-theme .cbe-header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1682,6 +1684,14 @@ ul, ol {
 
 .telebirr-theme .cbe-header-bar {
   background: #7CB342; /* Telebirr Green */
+}
+
+.dashen-theme .cbe-header-bar {
+  background: #0f2b5c; /* Dashen Royal Blue */
+}
+
+.abyssinia-theme .cbe-header-bar {
+  background: #006837; /* Abyssinia Deep Green */
 }
 
 .cbe-back-btn {
@@ -1710,7 +1720,9 @@ ul, ol {
 /* Tabs */
 .cbe-theme .tabs,
 .cbe_birr-theme .tabs,
-.telebirr-theme .tabs {
+.telebirr-theme .tabs,
+.dashen-theme .tabs,
+.abyssinia-theme .tabs {
   display: flex;
   background: #f1f5f9;
   border-radius: var(--radius-full);
@@ -1722,7 +1734,9 @@ ul, ol {
 
 .cbe-theme .tab,
 .cbe_birr-theme .tab,
-.telebirr-theme .tab {
+.telebirr-theme .tab,
+.dashen-theme .tab,
+.abyssinia-theme .tab {
   flex: 1;
   text-align: center;
   padding: var(--space-2) var(--space-4);
@@ -1738,7 +1752,9 @@ ul, ol {
 
 .cbe-theme .tab.active::before,
 .cbe_birr-theme .tab.active::before,
-.telebirr-theme .tab.active::before {
+.telebirr-theme .tab.active::before,
+.dashen-theme .tab.active::before,
+.abyssinia-theme .tab.active::before {
   content: '✓ ';
   font-weight: bold;
 }
@@ -1759,6 +1775,18 @@ ul, ol {
   background: #7CB342;
   color: #ffffff;
   box-shadow: 0 4px 10px rgba(124, 179, 66, 0.2);
+}
+
+.dashen-theme .tab.active {
+  background: #0f2b5c;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 43, 92, 0.2);
+}
+
+.abyssinia-theme .tab.active {
+  background: #006837;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 104, 55, 0.2);
 }
 
 /* Base Buttons */
@@ -1804,10 +1832,40 @@ ul, ol {
   transform: translateY(-1px);
 }
 
+.dashen-theme .btn-primary {
+  background: #D4145A; /* Dashen brand accent red */
+  color: #ffffff;
+  border-radius: var(--radius-full);
+  border: none;
+  box-shadow: 0 4px 14px rgba(212, 20, 90, 0.25);
+}
+
+.dashen-theme .btn-primary:hover {
+  background: #e61c6b;
+  box-shadow: 0 6px 18px rgba(212, 20, 90, 0.35);
+  transform: translateY(-1px);
+}
+
+.abyssinia-theme .btn-primary {
+  background: #006837; /* Abyssinia brand accent green */
+  color: #ffffff;
+  border-radius: var(--radius-full);
+  border: none;
+  box-shadow: 0 4px 14px rgba(0, 104, 55, 0.25);
+}
+
+.abyssinia-theme .btn-primary:hover {
+  background: #008747;
+  box-shadow: 0 6px 18px rgba(0, 104, 55, 0.35);
+  transform: translateY(-1px);
+}
+
 /* Light Card styling for Manual and Upload mode to match mobile apps */
 .cbe-theme .card:not(.scan-card),
 .cbe_birr-theme .card:not(.scan-card),
-.telebirr-theme .card:not(.scan-card) {
+.telebirr-theme .card:not(.scan-card),
+.dashen-theme .card:not(.scan-card),
+.abyssinia-theme .card:not(.scan-card) {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
@@ -1816,14 +1874,18 @@ ul, ol {
 
 .cbe-theme .card:not(.scan-card) .input-label,
 .cbe_birr-theme .card:not(.scan-card) .input-label,
-.telebirr-theme .card:not(.scan-card) .input-label {
+.telebirr-theme .card:not(.scan-card) .input-label,
+.dashen-theme .card:not(.scan-card) .input-label,
+.abyssinia-theme .card:not(.scan-card) .input-label {
   color: #475569;
   font-weight: 500;
 }
 
 .cbe-theme .card:not(.scan-card) .input-field,
 .cbe_birr-theme .card:not(.scan-card) .input-field,
-.telebirr-theme .card:not(.scan-card) .input-field {
+.telebirr-theme .card:not(.scan-card) .input-field,
+.dashen-theme .card:not(.scan-card) .input-field,
+.abyssinia-theme .card:not(.scan-card) .input-field {
   background: #f8fafc;
   border: 1.5px solid #cbd5e1;
   color: #0f172a;
@@ -1846,16 +1908,30 @@ ul, ol {
   box-shadow: 0 0 0 3px rgba(124, 179, 66, 0.12);
 }
 
+.dashen-theme .card:not(.scan-card) .input-field:focus {
+  border-color: #0f2b5c;
+  box-shadow: 0 0 0 3px rgba(15, 43, 92, 0.12);
+}
+
+.abyssinia-theme .card:not(.scan-card) .input-field:focus {
+  border-color: #006837;
+  box-shadow: 0 0 0 3px rgba(0, 104, 55, 0.12);
+}
+
 .cbe-theme .card:not(.scan-card) .input-help,
 .cbe_birr-theme .card:not(.scan-card) .input-help,
-.telebirr-theme .card:not(.scan-card) .input-help {
+.telebirr-theme .card:not(.scan-card) .input-help,
+.dashen-theme .card:not(.scan-card) .input-help,
+.abyssinia-theme .card:not(.scan-card) .input-help {
   color: #64748b;
 }
 
 /* Dark Card Styling for QR Scanner to simulate native app Receive Money/Scan card */
 .cbe-theme .card.scan-card,
 .cbe_birr-theme .card.scan-card,
-.telebirr-theme .card.scan-card {
+.telebirr-theme .card.scan-card,
+.dashen-theme .card.scan-card,
+.abyssinia-theme .card.scan-card {
   background: linear-gradient(135deg, #18181b, #09090b);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -1867,7 +1943,9 @@ ul, ol {
 /* World map background pattern for scanner card */
 .cbe-theme .card.scan-card::before,
 .cbe_birr-theme .card.scan-card::before,
-.telebirr-theme .card.scan-card::before {
+.telebirr-theme .card.scan-card::before,
+.dashen-theme .card.scan-card::before,
+.abyssinia-theme .card.scan-card::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -1878,7 +1956,9 @@ ul, ol {
 
 .cbe-theme .card.scan-card .input-label,
 .cbe_birr-theme .card.scan-card .input-label,
-.telebirr-theme .card.scan-card .input-label {
+.telebirr-theme .card.scan-card .input-label,
+.dashen-theme .card.scan-card .input-label,
+.abyssinia-theme .card.scan-card .input-label {
   color: #e4e4e7;
   text-align: center;
   font-size: var(--font-size-sm);
@@ -1888,7 +1968,9 @@ ul, ol {
 /* Glowing Neon Scanner Frame */
 .cbe-theme .card.scan-card video,
 .cbe_birr-theme .card.scan-card video,
-.telebirr-theme .card.scan-card video {
+.telebirr-theme .card.scan-card video,
+.dashen-theme .card.scan-card video,
+.abyssinia-theme .card.scan-card video {
   border-radius: 12px;
 }
 
@@ -1910,9 +1992,23 @@ ul, ol {
   box-shadow: 0 0 20px rgba(124, 179, 66, 0.8), inset 0 0 20px rgba(124, 179, 66, 0.4) !important;
 }
 
+.dashen-theme .card.scan-card div[style*="border"] {
+  border: 3px solid #D4145A !important;
+  border-radius: 16px !important;
+  box-shadow: 0 0 20px rgba(212, 20, 90, 0.8), inset 0 0 20px rgba(212, 20, 90, 0.4) !important;
+}
+
+.abyssinia-theme .card.scan-card div[style*="border"] {
+  border: 3px solid #006837 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 0 20px rgba(0, 104, 55, 0.8), inset 0 0 20px rgba(0, 104, 55, 0.4) !important;
+}
+
 .cbe-theme .card.scan-card .input-help,
 .cbe_birr-theme .card.scan-card .input-help,
-.telebirr-theme .card.scan-card .input-help {
+.telebirr-theme .card.scan-card .input-help,
+.dashen-theme .card.scan-card .input-help,
+.abyssinia-theme .card.scan-card .input-help {
   color: #a1a1aa;
 }
 
