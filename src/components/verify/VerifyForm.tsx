@@ -2,17 +2,52 @@
 
 import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
-import { PROVIDER_LABELS, type Provider, type VerificationResult } from '@/types';
+import { PROVIDER_LABELS, PROVIDER_COLORS, type Provider, type VerificationResult } from '@/types';
 import { findReceiptReference } from '@/lib/receipt-input';
 import ResultCard from './ResultCard';
 
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 
+const PROVIDER_AVATAR_TEXT: Record<Provider, string> = {
+  CBE: 'CBE',
+  TELEBIRR: 'tb',
+  DASHEN: 'DB',
+  ABYSSINIA: 'BoA',
+  CBE_BIRR: 'CB',
+  MPESA: 'M',
+};
+
+const PROVIDER_SUBTITLES: Record<Provider, string> = {
+  CBE: 'Bank',
+  TELEBIRR: 'Mobile Wallet',
+  DASHEN: 'Bank',
+  ABYSSINIA: 'Bank',
+  CBE_BIRR: 'Mobile Wallet',
+  MPESA: 'Mobile Wallet',
+};
+
+const PROVIDER_HELP_TEXTS: Record<Provider, string> = {
+  CBE: 'Enter the 12-digit transaction reference starting with FT (e.g. FT24123ABCDE) or paste a CBE receipt link.',
+  TELEBIRR: 'Enter the 10-digit alphanumeric transaction ID (e.g. DG61L8C6XB) or paste a Telebirr receipt link.',
+  DASHEN: 'Enter the Dashen Bank transaction reference number.',
+  ABYSSINIA: 'Enter the Bank of Abyssinia transaction reference number.',
+  CBE_BIRR: 'Enter the CBE Birr receipt number.',
+  MPESA: 'Enter the M-Pesa receipt number.',
+};
+
+const PROVIDER_PLACEHOLDERS: Record<Provider, string> = {
+  CBE: 'e.g. FT24123ABCDE',
+  TELEBIRR: 'e.g. DG61L8C6XB',
+  DASHEN: 'e.g. DS987654321',
+  ABYSSINIA: 'e.g. AB12345678',
+  CBE_BIRR: 'e.g. CB12345678',
+  MPESA: 'e.g. MP12345678',
+};
+
 export default function VerifyForm() {
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [mode, setMode] = useState<'scan' | 'manual' | 'upload'>('scan');
   const [input, setInput] = useState('');
-  // '' = auto-detect; otherwise the provider the user pinned on the manual form
-  const [manualProvider, setManualProvider] = useState<'' | Provider>('');
   const [expectedAmount, setExpectedAmount] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -102,13 +137,13 @@ export default function VerifyForm() {
     }
     stopCamera();
     setInput(parsed.reference);
-    void runVerification(t);
+    void runVerification(t, selectedProvider ?? undefined);
     return true;
   }
 
   // Start/stop the camera + QR scan loop as the user enters/leaves scan mode
   useEffect(() => {
-    if (mode !== 'scan' || result) return;
+    if (mode !== 'scan' || result || !selectedProvider) return;
     let cancelled = false;
     let rafId = 0;
     const canvas = document.createElement('canvas');
@@ -185,7 +220,7 @@ export default function VerifyForm() {
       stopCamera();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, result, scanEpoch]);
+  }, [mode, result, scanEpoch, selectedProvider]);
 
   function openScanTab() {
     setCameraError(null);
@@ -196,7 +231,7 @@ export default function VerifyForm() {
 
   async function verify(e: React.FormEvent) {
     e.preventDefault();
-    await runVerification(input, manualProvider || undefined);
+    await runVerification(input, selectedProvider ?? undefined);
   }
 
   // The photo is processed on-device: QR decode first, then OCR.
@@ -215,7 +250,7 @@ export default function VerifyForm() {
         );
         return;
       }
-      await runVerification(extracted.input);
+      await runVerification(extracted.input, selectedProvider ?? undefined);
     } catch {
       setExtractStatus(null);
       setError('Could not read this image. Try another photo or use manual entry.');
@@ -284,8 +319,79 @@ export default function VerifyForm() {
     );
   }
 
+  if (!selectedProvider) {
+    return (
+      <div className="provider-selection-container">
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary)' }}>
+            Select Payment Provider
+          </h2>
+          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
+            Choose the bank or mobile wallet account to verify the payment against.
+          </p>
+        </div>
+
+        <div className="provider-grid">
+          {PROVIDERS.map((p) => (
+            <div
+              key={p}
+              className={`provider-card prov-${p.toLowerCase()}`}
+              onClick={() => setSelectedProvider(p)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  setSelectedProvider(p);
+                }
+              }}
+            >
+              <div className="provider-avatar">
+                {PROVIDER_AVATAR_TEXT[p]}
+              </div>
+              <div>
+                <div className="provider-title">{PROVIDER_LABELS[p]}</div>
+                <div className="provider-subtitle">{PROVIDER_SUBTITLES[p]}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 560, margin: '0 auto' }}>
+      {/* Selected Provider Banner */}
+      <div className="selected-provider-banner">
+        <div className="selected-provider-info">
+          <div
+            className="selected-provider-avatar"
+            style={{
+              background: `linear-gradient(135deg, ${PROVIDER_COLORS[selectedProvider]}, ${PROVIDER_COLORS[selectedProvider]}dd)`
+            }}
+          >
+            {PROVIDER_AVATAR_TEXT[selectedProvider]}
+          </div>
+          <div>
+            <div className="selected-provider-name">{PROVIDER_LABELS[selectedProvider]}</div>
+            <div style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', marginTop: '-2px' }}>
+              Active Verification Provider
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          style={{ padding: '4px 12px', fontSize: '12px' }}
+          onClick={() => {
+            setSelectedProvider(null);
+            clearResultState();
+          }}
+        >
+          Change Bank
+        </button>
+      </div>
+
       <div className="tabs">
         <button
           type="button"
@@ -362,7 +468,7 @@ export default function VerifyForm() {
                 )}
               </div>
               <span className="input-help">
-                Provider is detected automatically and verification starts as soon as the code is read.
+                Verification starts automatically as soon as the {PROVIDER_LABELS[selectedProvider]} code is read.
               </span>
             </div>
           )}
@@ -504,22 +610,6 @@ export default function VerifyForm() {
       ) : (
         <form className="card card-padding" onSubmit={verify}>
           <div className="input-group mb-4">
-            <label className="input-label">Payment provider</label>
-            <select
-              className="input-field select-field"
-              value={manualProvider}
-              onChange={(e) => setManualProvider(e.target.value as '' | Provider)}
-            >
-              <option value="">Auto-detect</option>
-              {PROVIDERS.map((p) => (
-                <option key={p} value={p}>
-                  {PROVIDER_LABELS[p]}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="input-group mb-4">
             <label className="input-label">
               Reference number or receipt link<span className="required">*</span>
             </label>
@@ -527,17 +617,11 @@ export default function VerifyForm() {
               className="input-field"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="e.g. FT24351ABCD or DG61L8C6XB"
+              placeholder={PROVIDER_PLACEHOLDERS[selectedProvider]}
               required
             />
             <span className="input-help">
-              {(() => {
-                if (manualProvider) return `Will verify with ${PROVIDER_LABELS[manualProvider]}.`;
-                const detected = input.trim().length >= 6 ? findReceiptReference(input)?.provider : undefined;
-                return detected
-                  ? `Detected: ${PROVIDER_LABELS[detected]}. Pick a provider above if this is wrong.`
-                  : 'Provider is detected automatically — or pick it above. Receipt links (CBE/Telebirr) verify in one step.';
-              })()}
+              {PROVIDER_HELP_TEXTS[selectedProvider]}
             </span>
           </div>
 
@@ -563,3 +647,4 @@ export default function VerifyForm() {
     </div>
   );
 }
+
