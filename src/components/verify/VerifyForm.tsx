@@ -8,13 +8,13 @@ import ResultCard from './ResultCard';
 
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 
-const PROVIDER_AVATAR_TEXT: Record<Provider, string> = {
-  CBE: 'CBE',
-  TELEBIRR: 'tb',
-  DASHEN: 'DB',
-  ABYSSINIA: 'BoA',
-  CBE_BIRR: 'CB',
-  MPESA: 'M',
+const PROVIDER_LOGOS: Record<Provider, string> = {
+  CBE: '/Commercial Bank Of Ethiopia (PNG) @Izuki Labs.png',
+  TELEBIRR: '/Telebirr icon.png',
+  DASHEN: '/dashen_bank bank icon.png',
+  ABYSSINIA: '/abyssinia icon.png',
+  CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
+  MPESA: '/m-pesa icon.png',
 };
 
 const PROVIDER_SUBTITLES: Record<Provider, string> = {
@@ -346,7 +346,8 @@ export default function VerifyForm() {
               }}
             >
               <div className="provider-avatar">
-                {PROVIDER_AVATAR_TEXT[p]}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={PROVIDER_LOGOS[p]} alt={`${PROVIDER_LABELS[p]} Logo`} />
               </div>
               <div>
                 <div className="provider-title">{PROVIDER_LABELS[p]}</div>
@@ -364,13 +365,9 @@ export default function VerifyForm() {
       {/* Selected Provider Banner */}
       <div className="selected-provider-banner">
         <div className="selected-provider-info">
-          <div
-            className="selected-provider-avatar"
-            style={{
-              background: `linear-gradient(135deg, ${PROVIDER_COLORS[selectedProvider]}, ${PROVIDER_COLORS[selectedProvider]}dd)`
-            }}
-          >
-            {PROVIDER_AVATAR_TEXT[selectedProvider]}
+          <div className="selected-provider-avatar" style={{ background: '#ffffff', padding: '2px' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={PROVIDER_LOGOS[selectedProvider]} alt={PROVIDER_LABELS[selectedProvider]} style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} />
           </div>
           <div>
             <div className="selected-provider-name">{PROVIDER_LABELS[selectedProvider]}</div>

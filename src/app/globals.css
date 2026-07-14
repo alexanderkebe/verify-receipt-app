@@ -1498,7 +1498,8 @@ ul, ol {
 .provider-card {
   background: var(--color-glass);
   border: 1px solid var(--color-glass-border);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   display: flex;
@@ -1512,7 +1513,9 @@ ul, ol {
   position: relative;
   overflow: hidden;
   transition: all var(--transition-base);
-  box-shadow: var(--shadow-md);
+  box-shadow: 
+    var(--shadow-md), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
   user-select: none;
 }
 
@@ -1520,10 +1523,16 @@ ul, ol {
   transform: translateY(-4px);
   background: var(--color-glass-hover);
   border-color: var(--color-border-strong);
+  box-shadow: 
+    var(--shadow-lg), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .provider-card:active {
   transform: translateY(-1px) scale(0.98);
+  box-shadow: 
+    var(--shadow-sm), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 /* Individual Brand Glow and Border Effects on Hover */
@@ -1553,41 +1562,30 @@ ul, ol {
 }
 
 .provider-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: var(--radius-full);
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-xl);
-  color: #ffffff;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  padding: var(--space-2);
+  transition: transform var(--transition-spring), box-shadow var(--transition-fast);
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.provider-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: calc(var(--radius-lg) - 4px);
 }
 
 .provider-card:hover .provider-avatar {
-  transform: scale(1.1);
-}
-
-/* Provider Avatar Brand Gradients */
-.prov-cbe .provider-avatar {
-  background: linear-gradient(135deg, #1B4D8E, #0d2c54);
-}
-.prov-telebirr .provider-avatar {
-  background: linear-gradient(135deg, #00A651, #006b34);
-}
-.prov-dashen .provider-avatar {
-  background: linear-gradient(135deg, #D4145A, #8a0c3b);
-}
-.prov-abyssinia .provider-avatar {
-  background: linear-gradient(135deg, #006837, #00381e);
-}
-.prov-cbe_birr .provider-avatar {
-  background: linear-gradient(135deg, #2196F3, #1565C0);
-}
-.prov-mpesa .provider-avatar {
-  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  transform: scale(1.1) rotate(2deg);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .provider-title {
