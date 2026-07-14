@@ -291,7 +291,7 @@ export default function VerifyForm() {
 
   if (result) {
     return (
-      <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : ''}>
+      <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : selectedProvider === 'CBE_BIRR' ? 'cbe_birr-theme' : selectedProvider === 'TELEBIRR' ? 'telebirr-theme' : ''}>
         <ResultCard result={result} />
 
         {decisionMsg && (
@@ -357,33 +357,56 @@ export default function VerifyForm() {
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : ''}>
+    <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : selectedProvider === 'CBE_BIRR' ? 'cbe_birr-theme' : selectedProvider === 'TELEBIRR' ? 'telebirr-theme' : ''}>
       {/* Selected Provider Banner */}
-      <div className="selected-provider-banner">
-        <div className="selected-provider-info">
-          <div className="selected-provider-avatar">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={PROVIDER_LOGOS[selectedProvider]} alt={PROVIDER_LABELS[selectedProvider]} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          </div>
-          <div>
-            <div className="selected-provider-name">{PROVIDER_LABELS[selectedProvider]}</div>
-            <div style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', marginTop: '-2px' }}>
-              Active Verification Provider
+      {['CBE', 'CBE_BIRR', 'TELEBIRR'].includes(selectedProvider) ? (
+        <div className="cbe-header-bar">
+          <button
+            type="button"
+            className="cbe-back-btn"
+            onClick={() => {
+              setSelectedProvider(null);
+              clearResultState();
+            }}
+            title="Change Bank"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <span className="cbe-header-title">
+            {selectedProvider === 'CBE' ? 'CBE Verification' : selectedProvider === 'CBE_BIRR' ? 'CBE Birr Verification' : 'telebirr Verification'}
+          </span>
+          {/* Transparent Brand Logo directly on purple/green background */}
+          <img src={PROVIDER_LOGOS[selectedProvider]} alt={selectedProvider} style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
+        </div>
+      ) : (
+        <div className="selected-provider-banner">
+          <div className="selected-provider-info">
+            <div className="selected-provider-avatar">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={PROVIDER_LOGOS[selectedProvider]} alt={PROVIDER_LABELS[selectedProvider]} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+            <div>
+              <div className="selected-provider-name">{PROVIDER_LABELS[selectedProvider]}</div>
+              <div style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', marginTop: '-2px' }}>
+                Active Verification Provider
+              </div>
             </div>
           </div>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            style={{ padding: '4px 12px', fontSize: '12px' }}
+            onClick={() => {
+              setSelectedProvider(null);
+              clearResultState();
+            }}
+          >
+            Change Bank
+          </button>
         </div>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          style={{ padding: '4px 12px', fontSize: '12px' }}
-          onClick={() => {
-            setSelectedProvider(null);
-            clearResultState();
-          }}
-        >
-          Change Bank
-        </button>
-      </div>
+      )}
 
       <div className="tabs">
         <button
@@ -413,12 +436,12 @@ export default function VerifyForm() {
 
       {mode === 'scan' ? (
         <div className="card card-padding scan-card">
-          {selectedProvider === 'CBE' && (
+          {['CBE', 'CBE_BIRR', 'TELEBIRR'].includes(selectedProvider) && (
             <div className="cbe-scanner-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={PROVIDER_LOGOS.CBE} alt="CBE" style={{ height: '28px', objectFit: 'contain' }} />
-              <span style={{ fontSize: '9px', color: '#c08e51', letterSpacing: '0.08em', marginTop: '4px', textTransform: 'uppercase', fontWeight: 600 }}>
-                The bank you can always rely on!
+              <img src={PROVIDER_LOGOS[selectedProvider]} alt={selectedProvider} style={{ height: '28px', objectFit: 'contain' }} />
+              <span style={{ fontSize: '9px', color: selectedProvider === 'TELEBIRR' ? '#ffd54f' : '#c08e51', letterSpacing: '0.08em', marginTop: '4px', textTransform: 'uppercase', fontWeight: 600 }}>
+                {selectedProvider === 'TELEBIRR' ? 'ONE APP FOR ALL YOUR NEEDS!' : 'The bank you can always rely on!'}
               </span>
             </div>
           )}
@@ -469,6 +492,41 @@ export default function VerifyForm() {
                   </div>
                 )}
               </div>
+
+              {['CBE', 'CBE_BIRR', 'TELEBIRR'].includes(selectedProvider) && (
+                <div className="cbe-scanner-actions" style={{ display: 'flex', justifyContent: 'space-around', margin: '1.25rem 0' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="18" cy="5" r="3"></circle>
+                      <circle cx="6" cy="12" r="3"></circle>
+                      <circle cx="18" cy="19" r="3"></circle>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 500 }}>Share QR</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => {
+                    if (typeof navigator !== 'undefined') {
+                      navigator.clipboard.writeText(input);
+                    }
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 500 }}>Copy Link</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 500 }}>Download</span>
+                  </div>
+                </div>
+              )}
+
               <span className="input-help">
                 Verification starts automatically as soon as the {PROVIDER_LABELS[selectedProvider]} code is read.
               </span>
