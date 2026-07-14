@@ -480,54 +480,31 @@ export default function VerifyForm() {
             {loading ? 'Processing Receipt...' : 'Align QR code within the frame'}
           </div>
 
-          {/* Floating Bottom Navigation Bar */}
-          <div className="scanner-bottom-bar">
-            <button 
-              type="button" 
-              className="scanner-bottom-btn" 
-              onClick={() => setMode('manual')}
-              title="Manual Entry"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
-                <line x1="6" y1="8" x2="6.01" y2="8"></line>
-                <line x1="10" y1="8" x2="10.01" y2="8"></line>
-                <line x1="14" y1="8" x2="14.01" y2="8"></line>
-                <line x1="18" y1="8" x2="18.01" y2="8"></line>
-                <line x1="6" y1="12" x2="6.01" y2="12"></line>
-                <line x1="10" y1="12" x2="10.01" y2="12"></line>
-                <line x1="14" y1="12" x2="14.01" y2="12"></line>
-                <line x1="18" y1="12" x2="18.01" y2="12"></line>
-                <line x1="7" y1="16" x2="17" y2="16"></line>
-              </svg>
-            </button>
-
-            <button 
-              type="button" 
-              className="scanner-bottom-btn active-center"
-              title="Scanning Mode Active"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
-                <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
-                <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
-                <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
-                <line x1="7" y1="12" x2="17" y2="12"></line>
-              </svg>
-            </button>
-
-            <button 
-              type="button" 
-              className="scanner-bottom-btn" 
-              onClick={() => setMode('upload')}
-              title="Upload Image"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-              </svg>
-            </button>
+          {/* Floating Bottom Tabs Bar */}
+          <div className="scanner-tabs-container">
+            <div className="tabs">
+              <button
+                type="button"
+                className={`tab ${(mode as string) === 'scan' ? 'active' : ''}`}
+                onClick={openScanTab}
+              >
+                Scan QR code
+              </button>
+              <button
+                type="button"
+                className={`tab ${(mode as string) === 'manual' ? 'active' : ''}`}
+                onClick={() => setMode('manual')}
+              >
+                Manual entry
+              </button>
+              <button
+                type="button"
+                className={`tab ${(mode as string) === 'upload' ? 'active' : ''}`}
+                onClick={() => setMode('upload')}
+              >
+                Photo / upload
+              </button>
+            </div>
           </div>
           
           {scanNotice && (
