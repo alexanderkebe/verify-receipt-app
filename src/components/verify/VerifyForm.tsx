@@ -349,10 +349,6 @@ export default function VerifyForm() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={PROVIDER_LOGOS[p]} alt={`${PROVIDER_LABELS[p]} Logo`} />
               </div>
-              <div>
-                <div className="provider-title">{PROVIDER_LABELS[p]}</div>
-                <div className="provider-subtitle">{PROVIDER_SUBTITLES[p]}</div>
-              </div>
             </div>
           ))}
         </div>
