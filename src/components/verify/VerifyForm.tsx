@@ -9,12 +9,12 @@ import ResultCard from './ResultCard';
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 
 const PROVIDER_LOGOS: Record<Provider, string> = {
-  CBE: '/Commercial Bank Of Ethiopia (PNG) @Izuki Labs.png',
-  TELEBIRR: '/Telebirr icon.png',
-  DASHEN: '/dashen_bank bank icon.png',
-  ABYSSINIA: '/abyssinia icon.png',
-  CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
-  MPESA: '/m-pesa icon.png',
+  CBE: '/Commercial Bank Of Ethiopia (SVG) @Izuki Labs.svg',
+  TELEBIRR: '/Telebirr (SVG) @Izuki Labs.svg',
+  DASHEN: '/dashen_bank bank logo .png',
+  ABYSSINIA: '/abyssinia logo.png',
+  CBE_BIRR: '/CBE Birr (SVG) @Izuki Labs.svg',
+  MPESA: '/m-pesa logo and icon.png',
 };
 
 const PROVIDER_SUBTITLES: Record<Provider, string> = {
@@ -361,9 +361,9 @@ export default function VerifyForm() {
       {/* Selected Provider Banner */}
       <div className="selected-provider-banner">
         <div className="selected-provider-info">
-          <div className="selected-provider-avatar" style={{ background: '#ffffff', padding: '2px' }}>
+          <div className="selected-provider-avatar">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={PROVIDER_LOGOS[selectedProvider]} alt={PROVIDER_LABELS[selectedProvider]} style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} />
+            <img src={PROVIDER_LOGOS[selectedProvider]} alt={PROVIDER_LABELS[selectedProvider]} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <div>
             <div className="selected-provider-name">{PROVIDER_LABELS[selectedProvider]}</div>
