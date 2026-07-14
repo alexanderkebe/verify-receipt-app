@@ -496,7 +496,7 @@ export default function VerifyForm() {
               {['CBE', 'CBE_BIRR', 'TELEBIRR', 'DASHEN', 'ABYSSINIA'].includes(selectedProvider) && (
                 <div className="cbe-scanner-actions" style={{ display: 'flex', justifyContent: 'space-around', margin: '1.25rem 0' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#D4145A' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#1254d3' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="18" cy="5" r="3"></circle>
                       <circle cx="6" cy="12" r="3"></circle>
                       <circle cx="18" cy="19" r="3"></circle>
@@ -510,14 +510,14 @@ export default function VerifyForm() {
                       navigator.clipboard.writeText(input);
                     }
                   }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#D4145A' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#1254d3' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                     </svg>
                     <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 500 }}>Copy Link</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#D4145A' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#1254d3' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="7 10 12 15 17 10"></polyline>
                       <line x1="12" y1="15" x2="12" y2="3"></line>

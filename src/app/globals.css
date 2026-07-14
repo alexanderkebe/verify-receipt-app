@@ -1833,16 +1833,16 @@ ul, ol {
 }
 
 .dashen-theme .btn-primary {
-  background: #D4145A; /* Dashen brand accent red */
+  background: #1254d3; /* Dashen brand accent blue */
   color: #ffffff;
   border-radius: var(--radius-full);
   border: none;
-  box-shadow: 0 4px 14px rgba(212, 20, 90, 0.25);
+  box-shadow: 0 4px 14px rgba(18, 84, 211, 0.25);
 }
 
 .dashen-theme .btn-primary:hover {
-  background: #e61c6b;
-  box-shadow: 0 6px 18px rgba(212, 20, 90, 0.35);
+  background: #0f4ec7;
+  box-shadow: 0 6px 18px rgba(18, 84, 211, 0.35);
   transform: translateY(-1px);
 }
 
@@ -1993,9 +1993,9 @@ ul, ol {
 }
 
 .dashen-theme .card.scan-card div[style*="border"] {
-  border: 3px solid #D4145A !important;
+  border: 3px solid #1254d3 !important;
   border-radius: 16px !important;
-  box-shadow: 0 0 20px rgba(212, 20, 90, 0.8), inset 0 0 20px rgba(212, 20, 90, 0.4) !important;
+  box-shadow: 0 0 20px rgba(18, 84, 211, 0.8), inset 0 0 20px rgba(18, 84, 211, 0.4) !important;
 }
 
 .abyssinia-theme .card.scan-card div[style*="border"] {
