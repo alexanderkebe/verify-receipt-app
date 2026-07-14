@@ -11,10 +11,16 @@ const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 const PROVIDER_LOGOS: Record<Provider, string> = {
   CBE: '/Commercial Bank Of Ethiopia (SVG) @Izuki Labs.svg',
   TELEBIRR: '/Telebirr (SVG) @Izuki Labs.svg',
-  DASHEN: '/dashen_bank bank logo .png',
-  ABYSSINIA: '/abyssinia-white-icon.png',
+  DASHEN: '/dashen_bank bank icon.png',
+  ABYSSINIA: '/abyssinia icon.png',
   CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
   MPESA: '/m-pesa logo and icon.png',
+};
+
+const PROVIDER_THEME_LOGOS: Record<Provider, string> = {
+  ...PROVIDER_LOGOS,
+  DASHEN: '/dashin-icon-white.png',
+  ABYSSINIA: '/abyssinia-white-icon.png',
 };
 
 const PROVIDER_SUBTITLES: Record<Provider, string> = {
@@ -357,108 +363,54 @@ export default function VerifyForm() {
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : selectedProvider === 'CBE_BIRR' ? 'cbe_birr-theme' : selectedProvider === 'TELEBIRR' ? 'telebirr-theme' : selectedProvider === 'DASHEN' ? 'dashen-theme' : selectedProvider === 'ABYSSINIA' ? 'abyssinia-theme' : ''}>
-      {/* Selected Provider Banner */}
-      {['CBE', 'CBE_BIRR', 'TELEBIRR', 'DASHEN', 'ABYSSINIA'].includes(selectedProvider) ? (
-        <div className="cbe-header-bar">
-          <button
-            type="button"
-            className="cbe-back-btn"
-            onClick={() => {
-              setSelectedProvider(null);
-              clearResultState();
-            }}
-            title="Change Bank"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <span className="cbe-header-title">
-            {selectedProvider === 'CBE' ? 'CBE Verification' : selectedProvider === 'CBE_BIRR' ? 'CBE Birr Verification' : selectedProvider === 'TELEBIRR' ? 'telebirr Verification' : selectedProvider === 'DASHEN' ? 'Dashen Verification' : 'Abyssinia Verification'}
-          </span>
-          {/* Transparent Brand Logo directly on purple/green/blue background */}
-          <img src={PROVIDER_LOGOS[selectedProvider]} alt={selectedProvider} style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
-        </div>
-      ) : (
-        <div className="selected-provider-banner">
-          <div className="selected-provider-info">
-            <div className="selected-provider-avatar">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={PROVIDER_LOGOS[selectedProvider]} alt={PROVIDER_LABELS[selectedProvider]} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            </div>
-            <div>
-              <div className="selected-provider-name">{PROVIDER_LABELS[selectedProvider]}</div>
-              <div style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', marginTop: '-2px' }}>
-                Active Verification Provider
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            style={{ padding: '4px 12px', fontSize: '12px' }}
-            onClick={() => {
-              setSelectedProvider(null);
-              clearResultState();
-            }}
-          >
-            Change Bank
-          </button>
-        </div>
-      )}
-
-      <div className="tabs">
-        <button
-          type="button"
-          className={`tab ${mode === 'scan' ? 'active' : ''}`}
-          onClick={openScanTab}
-        >
-          Scan QR code
-        </button>
-        <button
-          type="button"
-          className={`tab ${mode === 'manual' ? 'active' : ''}`}
-          onClick={() => setMode('manual')}
-        >
-          Manual entry
-        </button>
-        <button
-          type="button"
-          className={`tab ${mode === 'upload' ? 'active' : ''}`}
-          onClick={() => setMode('upload')}
-        >
-          Photo / upload
-        </button>
-      </div>
-
-      {error && <div className="alert alert-danger mb-4">{error}</div>}
-
+    <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : selectedProvider === 'CBE_BIRR' ? 'cbe_birr-theme' : selectedProvider === 'TELEBIRR' ? 'telebirr-theme' : selectedProvider === 'DASHEN' ? 'dashen-theme' : selectedProvider === 'ABYSSINIA' ? 'abyssinia-theme' : selectedProvider === 'MPESA' ? 'mpesa-theme' : ''}>
       {mode === 'scan' ? (
-        <div className="card card-padding scan-card">
-          {['CBE', 'CBE_BIRR', 'TELEBIRR', 'DASHEN', 'ABYSSINIA'].includes(selectedProvider) && (
-            <div className="cbe-scanner-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={PROVIDER_LOGOS[selectedProvider]} alt={selectedProvider} style={{ height: '28px', objectFit: 'contain' }} />
-              <span style={{ fontSize: '9px', color: selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#ffd54f' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51', letterSpacing: '0.08em', marginTop: '4px', textTransform: 'uppercase', fontWeight: 600 }}>
-                {selectedProvider === 'TELEBIRR' ? 'ONE APP FOR ALL YOUR NEEDS!' : selectedProvider === 'DASHEN' ? 'ALWAYS AHEAD!' : selectedProvider === 'ABYSSINIA' ? 'THE CHOICE FOR ALL!' : 'The bank you can always rely on!'}
-              </span>
-            </div>
-          )}
-          {cameraError ? (
-            <div className="alert alert-danger mb-4">{cameraError}</div>
-          ) : (
-            <div className="input-group mb-4">
-              <label className="input-label">Point the camera at the QR code on the receipt</label>
-              <div
+        <div 
+          className="full-screen-scanner" 
+          style={{
+            '--scanner-accent-color': selectedProvider === 'CBE' ? '#701A75' : 
+                                       selectedProvider === 'CBE_BIRR' ? '#882b7a' : 
+                                       selectedProvider === 'TELEBIRR' ? '#7CB342' : 
+                                       selectedProvider === 'DASHEN' ? '#1254d3' : 
+                                       selectedProvider === 'ABYSSINIA' ? '#F3B315' : 
+                                       selectedProvider === 'MPESA' ? '#00a859' : '#c08e51'
+          } as React.CSSProperties}
+        >
+          {/* Camera Feed */}
+          <div className="scanner-video-container">
+            {cameraError ? (
+              <div 
                 style={{
-                  position: 'relative',
-                  borderRadius: 8,
-                  overflow: 'hidden',
-                  background: '#000',
-                  aspectRatio: '1 / 1',
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: '#ffffff',
+                  background: '#09090b',
                 }}
               >
+                <div>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" style={{ margin: '0 auto 1rem' }}>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <p style={{ fontSize: '14px', fontWeight: 500 }}>{cameraError}</p>
+                  <button 
+                    type="button"
+                    className="btn btn-sm mt-4" 
+                    style={{ background: 'var(--scanner-accent-color)', border: 'none', color: '#fff', padding: '6px 16px', borderRadius: 20 }}
+                    onClick={() => setMode('manual')}
+                  >
+                    Use Manual Entry
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
                 <video
                   ref={videoRef}
                   autoPlay
@@ -466,243 +418,340 @@ export default function VerifyForm() {
                   muted
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
-                {/* Scan frame overlay */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: '15%',
-                    border: '2px solid rgba(245, 166, 35, 0.9)',
-                    borderRadius: 12,
-                    boxShadow: '0 0 0 999px rgba(0, 0, 0, 0.35)',
-                    pointerEvents: 'none',
-                  }}
-                />
-                {loading && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: 'rgba(0,0,0,0.55)',
-                    }}
-                  >
-                    <span className="spinner spinner-lg" />
-                  </div>
-                )}
-              </div>
-
-              {['CBE', 'CBE_BIRR', 'TELEBIRR', 'DASHEN', 'ABYSSINIA'].includes(selectedProvider) && (
-                <div className="cbe-scanner-actions" style={{ display: 'flex', justifyContent: 'space-around', margin: '1.25rem 0' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#1254d3' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="18" cy="5" r="3"></circle>
-                      <circle cx="6" cy="12" r="3"></circle>
-                      <circle cx="18" cy="19" r="3"></circle>
-                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                    </svg>
-                    <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 500 }}>Share QR</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => {
-                    if (typeof navigator !== 'undefined') {
-                      navigator.clipboard.writeText(input);
-                    }
-                  }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#1254d3' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                    </svg>
-                    <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 500 }}>Copy Link</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedProvider === 'TELEBIRR' ? '#ffd54f' : selectedProvider === 'DASHEN' ? '#1254d3' : selectedProvider === 'ABYSSINIA' ? '#ffd54f' : '#c08e51'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7 10 12 15 17 10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 500 }}>Download</span>
-                  </div>
-                </div>
-              )}
-
-              <span className="input-help">
-                Verification starts automatically as soon as the {PROVIDER_LABELS[selectedProvider]} code is read.
-              </span>
-            </div>
-          )}
-
-          {scanNotice && (
-            <div className="mb-4">
-              <div className="alert alert-warning mb-2">{scanNotice}</div>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  className="btn btn-primary w-full"
-                  onClick={() => {
-                    setScanNotice(null);
-                    setMode('upload');
-                  }}
-                >
-                  📷 Photo mode
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary w-full"
-                  onClick={() => {
-                    setScanNotice(null);
-                    setMode('manual');
-                  }}
-                >
-                  ⌨ Manual entry
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="input-group">
-            <label className="input-label">Expected amount (ETB)</label>
-            <input
-              className="input-field"
-              type="number"
-              step="0.01"
-              min="0"
-              value={expectedAmount}
-              onChange={(e) => setExpectedAmount(e.target.value)}
-              placeholder="Optional — enables amount matching"
-            />
-            <span className="input-help">Enter this before scanning to flag amount mismatches.</span>
+                <div className="scanner-overlay-mask" />
+              </>
+            )}
           </div>
-        </div>
-      ) : mode === 'upload' ? (
-        <form className="card card-padding" onSubmit={uploadVerify}>
-          <div className="input-group mb-4">
-            <label className="input-label">Receipt photo or screenshot</label>
-            {/* Hidden inputs: one opens the camera on phones, one the gallery */}
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              style={{ display: 'none' }}
-              onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
-            />
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
-            />
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="btn btn-secondary w-full"
-                onClick={() => cameraInputRef.current?.click()}
-              >
-                📷 Take photo
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary w-full"
-                onClick={() => galleryInputRef.current?.click()}
-              >
-                🖼 Choose image
-              </button>
-            </div>
-            {filePreview && (
-              <div className="flex items-center gap-3 mt-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={filePreview}
-                  alt="Selected receipt"
-                  style={{
-                    width: 64,
-                    height: 64,
-                    objectFit: 'cover',
-                    borderRadius: 8,
-                    border: '1px solid var(--color-border)',
-                  }}
+
+          {/* Top Action Bar */}
+          <div className="scanner-top-bar">
+            <button 
+              type="button" 
+              className="scanner-circle-btn" 
+              onClick={() => setMode('manual')}
+              title="Close Scanner"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            
+            {/* Header Brand Logo Floating */}
+            {selectedProvider && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <img 
+                  src={PROVIDER_THEME_LOGOS[selectedProvider]} 
+                  alt={selectedProvider} 
+                  style={{ height: '24px', objectFit: 'contain' }} 
                 />
-                <div style={{ minWidth: 0 }}>
-                  <div className="text-sm font-medium truncate">{file?.name ?? 'Photo'}</div>
-                  <button
-                    type="button"
-                    className="text-xs"
-                    style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', padding: 0 }}
-                    onClick={() => pickFile(null)}
-                  >
-                    Remove
-                  </button>
-                </div>
+                <span style={{ fontSize: '8px', color: '#ffffff', opacity: 0.8, letterSpacing: '0.08em', marginTop: '2px', textTransform: 'uppercase', fontWeight: 600 }}>
+                  {selectedProvider === 'TELEBIRR' ? 'ONE APP FOR ALL YOUR NEEDS!' : selectedProvider === 'DASHEN' ? 'ALWAYS AHEAD!' : selectedProvider === 'ABYSSINIA' ? 'THE CHOICE FOR ALL!' : selectedProvider === 'MPESA' ? 'EXPERIENCE THE FUTURE OF CONVENIENCE' : 'The bank you can always rely on!'}
+                </span>
               </div>
             )}
-            <span className="input-help">
-              The QR code or reference number is read on your device — the photo is never uploaded.
-            </span>
+
+            <div className="scanner-top-right-group">
+              <button type="button" className="scanner-circle-btn" title="Toggle Flashlight" onClick={() => {
+                setScanNotice(scanNotice ? null : "Flashlight is not supported by your browser");
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div className="input-group mb-6">
-            <label className="input-label">Expected amount (ETB)</label>
-            <input
-              className="input-field"
-              type="number"
-              step="0.01"
-              min="0"
-              value={expectedAmount}
-              onChange={(e) => setExpectedAmount(e.target.value)}
-              placeholder="Optional — enables amount matching"
-            />
-          </div>
-          {extractStatus && (
-            <div className="alert alert-info mb-4" style={{ alignItems: 'center' }}>
-              <span className="spinner spinner-sm" /> {extractStatus}
+
+          {/* Central Target Scanner Area */}
+          {!cameraError && (
+            <div className="scanner-target-area">
+              <div className="scanner-target-corner top-left" />
+              <div className="scanner-target-corner top-right" />
+              <div className="scanner-target-corner bottom-left" />
+              <div className="scanner-target-corner bottom-right" />
+              
+              {/* Laser line moving up & down */}
+              <div className="scanner-laser-line" />
             </div>
           )}
-          <button
-            type="submit"
-            className="btn btn-primary btn-lg w-full"
-            disabled={loading || !file || Boolean(extractStatus)}
-          >
-            {loading || extractStatus ? <span className="spinner spinner-sm" /> : 'Verify receipt'}
-          </button>
-        </form>
+
+          {/* Floating Scanning Status Pill */}
+          <div className="scanner-status-pill">
+            {loading ? 'Processing Receipt...' : 'Align QR code within the frame'}
+          </div>
+
+          {/* Floating Bottom Navigation Bar */}
+          <div className="scanner-bottom-bar">
+            <button 
+              type="button" 
+              className="scanner-bottom-btn" 
+              onClick={() => setMode('manual')}
+              title="Manual Entry"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                <line x1="6" y1="8" x2="6.01" y2="8"></line>
+                <line x1="10" y1="8" x2="10.01" y2="8"></line>
+                <line x1="14" y1="8" x2="14.01" y2="8"></line>
+                <line x1="18" y1="8" x2="18.01" y2="8"></line>
+                <line x1="6" y1="12" x2="6.01" y2="12"></line>
+                <line x1="10" y1="12" x2="10.01" y2="12"></line>
+                <line x1="14" y1="12" x2="14.01" y2="12"></line>
+                <line x1="18" y1="12" x2="18.01" y2="12"></line>
+                <line x1="7" y1="16" x2="17" y2="16"></line>
+              </svg>
+            </button>
+
+            <button 
+              type="button" 
+              className="scanner-bottom-btn active-center"
+              title="Scanning Mode Active"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                <line x1="7" y1="12" x2="17" y2="12"></line>
+              </svg>
+            </button>
+
+            <button 
+              type="button" 
+              className="scanner-bottom-btn" 
+              onClick={() => setMode('upload')}
+              title="Upload Image"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </button>
+          </div>
+          
+          {scanNotice && (
+            <div 
+              style={{
+                position: 'absolute',
+                top: '90px',
+                left: '20px',
+                right: '20px',
+                zIndex: 1020,
+              }}
+            >
+              <div className="alert alert-warning m-0 shadow">{scanNotice}</div>
+            </div>
+          )}
+        </div>
       ) : (
-        <form className="card card-padding" onSubmit={verify}>
-          <div className="input-group mb-4">
-            <label className="input-label">
-              Reference number or receipt link<span className="required">*</span>
-            </label>
-            <input
-              className="input-field"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={PROVIDER_PLACEHOLDERS[selectedProvider]}
-              required
-            />
-            <span className="input-help">
-              {PROVIDER_HELP_TEXTS[selectedProvider]}
-            </span>
+        <>
+          {/* Selected Provider Banner */}
+          {['CBE', 'CBE_BIRR', 'TELEBIRR', 'DASHEN', 'ABYSSINIA', 'MPESA'].includes(selectedProvider) ? (
+            <div className="cbe-header-bar">
+              <button
+                type="button"
+                className="cbe-back-btn"
+                onClick={() => {
+                  setSelectedProvider(null);
+                  clearResultState();
+                }}
+                title="Change Bank"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <span className="cbe-header-title">
+                {selectedProvider === 'CBE' ? 'CBE Verification' : selectedProvider === 'CBE_BIRR' ? 'CBE Birr Verification' : selectedProvider === 'TELEBIRR' ? 'telebirr Verification' : selectedProvider === 'DASHEN' ? 'Dashen Verification' : selectedProvider === 'ABYSSINIA' ? 'Abyssinia Verification' : 'M-Pesa Verification'}
+              </span>
+              {/* Transparent Brand Logo directly on purple/green/blue/yellow background */}
+              <img src={PROVIDER_THEME_LOGOS[selectedProvider]} alt={selectedProvider} style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
+            </div>
+          ) : (
+            <div className="selected-provider-banner">
+              <div className="selected-provider-info">
+                <div className="selected-provider-avatar">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={PROVIDER_LOGOS[selectedProvider]} alt={PROVIDER_LABELS[selectedProvider]} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                </div>
+                <div>
+                  <div className="selected-provider-name">{PROVIDER_LABELS[selectedProvider]}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', marginTop: '-2px' }}>
+                    Active Verification Provider
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ padding: '4px 12px', fontSize: '12px' }}
+                onClick={() => {
+                  setSelectedProvider(null);
+                  clearResultState();
+                }}
+              >
+                Change Bank
+              </button>
+            </div>
+          )}
+
+          <div className="tabs">
+            <button
+              type="button"
+              className={`tab ${(mode as string) === 'scan' ? 'active' : ''}`}
+              onClick={openScanTab}
+            >
+              Scan QR code
+            </button>
+            <button
+              type="button"
+              className={`tab ${mode === 'manual' ? 'active' : ''}`}
+              onClick={() => setMode('manual')}
+            >
+              Manual entry
+            </button>
+            <button
+              type="button"
+              className={`tab ${mode === 'upload' ? 'active' : ''}`}
+              onClick={() => setMode('upload')}
+            >
+              Photo / upload
+            </button>
           </div>
 
-          <div className="input-group mb-6">
-            <label className="input-label">Expected amount (ETB)</label>
-            <input
-              className="input-field"
-              type="number"
-              step="0.01"
-              min="0"
-              value={expectedAmount}
-              onChange={(e) => setExpectedAmount(e.target.value)}
-              placeholder="Optional — enables amount matching"
-            />
-            <span className="input-help">Enter what the customer should have paid to flag amount mismatches.</span>
-          </div>
+          {error && <div className="alert alert-danger mb-4">{error}</div>}
 
-          <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
-            {loading ? <span className="spinner spinner-sm" /> : 'Verify receipt'}
-          </button>
-        </form>
+          {mode === 'upload' ? (
+            <form className="card card-padding" onSubmit={uploadVerify}>
+              <div className="input-group mb-4">
+                <label className="input-label">Receipt photo or screenshot</label>
+                {/* Hidden inputs: one opens the camera on phones, one the gallery */}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: 'none' }}
+                  onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+                />
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+                />
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    className="btn btn-secondary w-full"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    📷 Take photo
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary w-full"
+                    onClick={() => galleryInputRef.current?.click()}
+                  >
+                    🖼 Choose image
+                  </button>
+                </div>
+                {filePreview && (
+                  <div className="flex items-center gap-3 mt-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={filePreview}
+                      alt="Selected receipt"
+                      style={{
+                        width: 64,
+                        height: 64,
+                        objectFit: 'cover',
+                        borderRadius: 8,
+                        border: '1px solid var(--color-border)',
+                      }}
+                    />
+                    <div style={{ minWidth: 0 }}>
+                      <div className="text-sm font-medium truncate">{file?.name ?? 'Photo'}</div>
+                      <button
+                        type="button"
+                        className="text-xs"
+                        style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', padding: 0 }}
+                        onClick={() => pickFile(null)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <span className="input-help">
+                  The QR code or reference number is read on your device — the photo is never uploaded.
+                </span>
+              </div>
+              <div className="input-group mb-6">
+                <label className="input-label">Expected amount (ETB)</label>
+                <input
+                  className="input-field"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={expectedAmount}
+                  onChange={(e) => setExpectedAmount(e.target.value)}
+                  placeholder="Optional — enables amount matching"
+                />
+              </div>
+              {extractStatus && (
+                <div className="alert alert-info mb-4" style={{ alignItems: 'center' }}>
+                  <span className="spinner spinner-sm" /> {extractStatus}
+                </div>
+              )}
+              <button
+                type="submit"
+                className="btn btn-primary btn-lg w-full"
+                disabled={loading || !file || Boolean(extractStatus)}
+              >
+                {loading || extractStatus ? <span className="spinner spinner-sm" /> : 'Verify receipt'}
+              </button>
+            </form>
+          ) : (
+            <form className="card card-padding" onSubmit={verify}>
+              <div className="input-group mb-4">
+                <label className="input-label">
+                  Reference number or receipt link<span className="required">*</span>
+                </label>
+                <input
+                  className="input-field"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={PROVIDER_PLACEHOLDERS[selectedProvider]}
+                  required
+                />
+                <span className="input-help">
+                  {PROVIDER_HELP_TEXTS[selectedProvider]}
+                </span>
+              </div>
+
+              <div className="input-group mb-6">
+                <label className="input-label">Expected amount (ETB)</label>
+                <input
+                  className="input-field"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={expectedAmount}
+                  onChange={(e) => setExpectedAmount(e.target.value)}
+                  placeholder="Optional — enables amount matching"
+                />
+                <span className="input-help">Enter what the customer should have paid to flag amount mismatches.</span>
+              </div>
+
+              <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
+                {loading ? <span className="spinner spinner-sm" /> : 'Verify receipt'}
+              </button>
+            </form>
+          )}
+        </>
       )}
     </div>
   );
