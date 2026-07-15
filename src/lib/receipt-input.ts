@@ -13,8 +13,13 @@ export interface ParsedReceiptInput {
   provider?: Provider;
   reference: string;
   suffix?: string;
-  /** Opaque token from a hosted CBE receipt URL (new-format mobile-banking QR) */
-  cbeToken?: string;
+  /** Opaque token from a hosted receipt URL (CBE mbreciept / BoA slip QR) —
+   *  resolved directly against the bank's own public receipt API. */
+  receiptToken?: string;
+  /** True when the provider is implied by the input itself (a bank receipt
+   *  URL). Bare FT references are ambiguous (CBE and BoA both use them), so
+   *  without this flag the user's provider selection should win. */
+  providerCertain?: boolean;
 }
 
 /**
@@ -32,7 +37,23 @@ export function findReceiptReference(raw: string): ParsedReceiptInput | null {
   // token that CBE's public receipt API resolves to the full transaction.
   const cbeHosted = input.match(/mbrec(?:ie|ei)pt\.cbe\.com\.et(?::\d+)?\/([A-Za-z0-9_-]{8,64})/i);
   if (cbeHosted) {
-    return { provider: 'CBE', reference: cbeHosted[1], cbeToken: cbeHosted[1] };
+    return { provider: 'CBE', reference: cbeHosted[1], receiptToken: cbeHosted[1], providerCertain: true };
+  }
+
+  // Bank of Abyssinia receipt QR: a hosted slip URL, e.g.
+  // https://cs.bankofabyssinia.com/slip/?trx=FT26196XXKC9...
+  // The slip page passes the trx value verbatim to BoA's public API, so we
+  // keep the whole token (it can carry more than the bare FT reference).
+  const boaUrl = input.match(/bankofabyssinia\.com[^?#]*\?[^#]*\btrx=([A-Za-z0-9_-]{6,64})/i);
+  if (boaUrl) {
+    const token = boaUrl[1];
+    const upper = token.toUpperCase();
+    return {
+      provider: 'ABYSSINIA',
+      reference: /^FT/.test(upper) && upper.length > 12 ? upper.slice(0, 12) : upper,
+      receiptToken: token,
+      providerCertain: true,
+    };
   }
 
   // CBE receipt URL, e.g. https://apps.cbe.com.et:100/?id=FT26123ABC1212345678
@@ -41,16 +62,16 @@ export function findReceiptReference(raw: string): ParsedReceiptInput | null {
   if (cbeUrl) {
     const id = cbeUrl[1].toUpperCase();
     if (/^FT/.test(id) && id.length > 12) {
-      return { provider: 'CBE', reference: id.slice(0, 12), suffix: id.slice(12) };
+      return { provider: 'CBE', reference: id.slice(0, 12), suffix: id.slice(12), providerCertain: true };
     }
-    return { provider: 'CBE', reference: id };
+    return { provider: 'CBE', reference: id, providerCertain: true };
   }
 
   // Telebirr / ethiotelecom receipt URL, anywhere in the payload
   // e.g. https://transactioninfo.ethiotelecom.et/receipt/CEK3PN0PJ0
   const tbUrl = input.match(/ethiotelecom\.et\/(?:[a-z]+\/)?([A-Za-z0-9]{6,20})/i);
   if (tbUrl) {
-    return { provider: 'TELEBIRR', reference: tbUrl[1].toUpperCase() };
+    return { provider: 'TELEBIRR', reference: tbUrl[1].toUpperCase(), providerCertain: true };
   }
 
   // Any other URL — take an id-like query param or the last path segment

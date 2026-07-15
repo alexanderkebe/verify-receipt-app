@@ -22,11 +22,12 @@ export async function POST(req: NextRequest) {
     const parsed = manualVerificationSchema.safeParse(body);
     if (parsed.success) {
       const target = parseVerificationInput(parsed.data.input);
-      if (hasLiveVerifier() || target.cbeToken) {
+      if (hasLiveVerifier() || target.receiptToken) {
         const result = await performLiveDemoVerification({
           ...target,
-          // URL-derived provider wins; otherwise honour the user's selection
-          provider: target.provider ?? parsed.data.provider,
+          // URL-derived provider wins; bare references are ambiguous
+          // (CBE and BoA both use FT refs) so the user's selection wins there
+          provider: target.providerCertain ? target.provider : parsed.data.provider ?? target.provider,
           expectedAmount: parsed.data.expectedAmount,
         });
         return ok(result);
@@ -51,11 +52,12 @@ export async function POST(req: NextRequest) {
     const meta = extractRequestMeta(req.headers);
     const result = await performVerification(
       {
-        // URL-derived provider wins; otherwise honour the user's selection
-        provider: target.provider ?? parsed.data.provider,
+        // URL-derived provider wins; bare references are ambiguous
+        // (CBE and BoA both use FT refs) so the user's selection wins there
+        provider: target.providerCertain ? target.provider : parsed.data.provider ?? target.provider,
         reference: target.reference,
         suffix: target.suffix,
-        cbeToken: target.cbeToken,
+        receiptToken: target.receiptToken,
         expectedAmount: parsed.data.expectedAmount,
       },
       {

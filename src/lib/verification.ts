@@ -8,6 +8,7 @@ import type { Prisma } from '@prisma/client';
 import { hashReference, maskReference } from '@/lib/crypto';
 import { verifyByReference, verifyUniversal, createErrorResult } from '@/lib/verifier-api';
 import { resolveCbeReceipt } from '@/lib/cbe-receipt';
+import { resolveBoaReceipt } from '@/lib/boa-receipt';
 import { generateFraudAlerts } from '@/lib/fraud-detection';
 import { logAuditEvent, AuditActions } from '@/lib/audit';
 import type {
@@ -40,13 +41,17 @@ export async function performVerification(
   // 1. Check subscription limits
   await checkSubscriptionLimit(context.businessId);
 
-  // New-format CBE QRs carry a hosted-receipt token instead of the FT
-  // reference — resolve it against CBE's public receipt API first, so the
-  // real FT reference drives duplicate detection and storage.
+  // Hosted-receipt QRs (CBE mbreciept / BoA slip) carry an opaque token
+  // instead of the FT reference — resolve it against the bank's public
+  // receipt API first, so the real FT reference drives duplicate detection
+  // and storage.
   let resolved: NormalizedVerificationResult | null = null;
   let reference = input.reference;
-  if (input.cbeToken) {
-    resolved = await resolveCbeReceipt(input.cbeToken);
+  if (input.receiptToken) {
+    resolved =
+      input.provider === 'ABYSSINIA'
+        ? await resolveBoaReceipt(input.receiptToken)
+        : await resolveCbeReceipt(input.receiptToken);
     if (resolved.verificationStatus === 'VERIFIED') reference = resolved.reference;
   }
 
