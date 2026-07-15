@@ -794,6 +794,10 @@ ul, ol {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .sidebar-nav {
   flex: 1;
@@ -812,22 +816,44 @@ ul, ol {
   border-radius: var(--radius-lg);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  transition: all var(--transition-fast);
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
   text-decoration: none;
+  position: relative;
 }
 .sidebar-link:hover {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
+  transform: translateX(4px);
 }
 .sidebar-link.active {
   background: var(--color-accent-subtle);
   color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+}
+.sidebar-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 3px;
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.sidebar-link.active::before {
+  opacity: 1;
 }
 .sidebar-link .link-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
   opacity: 0.7;
+  transition: transform 0.2s ease;
+}
+.sidebar-link:hover .link-icon {
+  transform: scale(1.1);
 }
 .sidebar-link.active .link-icon {
   opacity: 1;
@@ -856,6 +882,7 @@ ul, ol {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -865,6 +892,23 @@ ul, ol {
 .top-header-title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.top-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+.top-header .text-sm.font-medium {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 /* ---- Main Content ---- */
@@ -1344,6 +1388,7 @@ ul, ol {
   .sidebar {
     transform: translateX(-100%);
     width: 280px;
+    max-width: 80vw;
     box-shadow: var(--shadow-xl);
   }
   .sidebar.open {
@@ -1359,9 +1404,6 @@ ul, ol {
   }
   .top-header-title {
     font-size: var(--font-size-base);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .main-content {
@@ -1421,7 +1463,10 @@ ul, ol {
   }
 
   .dropdown-menu {
-    max-width: calc(100vw - 2rem);
+    right: 0;
+    left: auto;
+    width: 220px;
+    max-width: calc(100vw - 32px);
   }
 
   .card-padding {

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { ADMIN_NAV_ITEMS } from '@/lib/constants';
 import Icon from '@/components/ui/Icon';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 export default function AdminChrome({ user, children }: { user: { name: string }; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -56,19 +57,22 @@ export default function AdminChrome({ user, children }: { user: { name: string }
           </button>
           <span className="top-header-title">Platform Administration</span>
         </div>
-        <div className="dropdown">
-          <button className="flex items-center gap-2 btn btn-ghost" onClick={() => setMenuOpen((o) => !o)}>
-            <span className="avatar avatar-sm">{user.name.slice(0, 2).toUpperCase()}</span>
-            <span className="text-sm font-medium hide-mobile">{user.name}</span>
-          </button>
-          {menuOpen && (
-            <div className="dropdown-menu">
-              <button className="dropdown-item" onClick={() => signOut({ callbackUrl: '/login' })}>
-                <Icon name="logout" size={16} />
-                Sign out
-              </button>
-            </div>
-          )}
+        <div className="top-header-actions">
+          <ThemeToggle />
+          <div className="dropdown">
+            <button className="flex items-center gap-2 btn btn-ghost" onClick={() => setMenuOpen((o) => !o)}>
+              <span className="avatar avatar-sm">{user.name.slice(0, 2).toUpperCase()}</span>
+              <span className="text-sm font-medium hide-mobile">{user.name}</span>
+            </button>
+            {menuOpen && (
+              <div className="dropdown-menu">
+                <button className="dropdown-item" onClick={() => signOut({ callbackUrl: '/login' })}>
+                  <Icon name="logout" size={16} />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

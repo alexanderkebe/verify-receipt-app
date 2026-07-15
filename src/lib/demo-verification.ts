@@ -9,6 +9,7 @@ import { VERIFIER_API_KEY } from '@/lib/constants';
 import { verifyByReference, verifyUniversal } from '@/lib/verifier-api';
 import { resolveCbeReceipt } from '@/lib/cbe-receipt';
 import { resolveBoaReceipt } from '@/lib/boa-receipt';
+import { resolveDashenReceipt } from '@/lib/dashen-receipt';
 import type { Provider, ResultLevel, NormalizedVerificationResult } from '@/types';
 
 export function hasLiveVerifier(): boolean {
@@ -26,12 +27,14 @@ interface LiveDemoInput {
 
 export async function performLiveDemoVerification(input: LiveDemoInput) {
   const start = Date.now();
-  // Hosted receipt tokens (CBE mbreciept / BoA slip) resolve against the
-  // bank's own public API — no Verifier API key needed.
+  // Hosted receipt tokens (CBE mbreciept / BoA slip / Dashen SuperApp) resolve
+  // against the bank's own public API — no Verifier API key needed.
   const apiResult = input.receiptToken
     ? input.provider === 'ABYSSINIA'
       ? await resolveBoaReceipt(input.receiptToken)
-      : await resolveCbeReceipt(input.receiptToken)
+      : input.provider === 'DASHEN'
+        ? await resolveDashenReceipt(input.receiptToken)
+        : await resolveCbeReceipt(input.receiptToken)
     : input.provider
       ? await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber)
       : await verifyUniversal(input.reference, input.suffix, input.phoneNumber);

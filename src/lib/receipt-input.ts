@@ -57,6 +57,22 @@ export function findReceiptReference(raw: string): ParsedReceiptInput | null {
     };
   }
 
+  // Dashen Bank (SuperApp) receipt QR. The QR encodes a token like
+  //   superappreceipt_<id>.<verifier>
+  // (sometimes wrapped in a https://…dashensuperapp.com/receipts/<token> URL).
+  // Resolved server-side against Dashen's hosted receipt API.
+  const dashenUrl = input.match(/dashensuperapp\.com\/receipts?\/([^/?#\s]+)/i);
+  const dashenToken = dashenUrl ? safeDecodeURIComponent(dashenUrl[1]) : input;
+  if (/^superappreceipt_[A-Za-z0-9]+\.[A-Za-z0-9]+$/i.test(dashenToken)) {
+    return {
+      provider: 'DASHEN',
+      // Provisional display value until the server resolves the real ref
+      reference: 'DASHEN-RECEIPT',
+      receiptToken: dashenToken,
+      providerCertain: true,
+    };
+  }
+
   // CBE receipt URL, e.g. https://apps.cbe.com.et:100/?id=FT26123ABC1212345678
   // The id is the 12-char FT reference with the 8-digit account suffix appended.
   const cbeUrl = input.match(/cbe\.com\.et[^?]*\?[^#]*\bid=([A-Za-z0-9]+)/i);

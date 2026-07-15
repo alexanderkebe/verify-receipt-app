@@ -9,6 +9,7 @@ import { hashReference, maskReference } from '@/lib/crypto';
 import { verifyByReference, verifyUniversal, createErrorResult } from '@/lib/verifier-api';
 import { resolveCbeReceipt } from '@/lib/cbe-receipt';
 import { resolveBoaReceipt } from '@/lib/boa-receipt';
+import { resolveDashenReceipt } from '@/lib/dashen-receipt';
 import { generateFraudAlerts } from '@/lib/fraud-detection';
 import { logAuditEvent, AuditActions } from '@/lib/audit';
 import type {
@@ -51,7 +52,9 @@ export async function performVerification(
     resolved =
       input.provider === 'ABYSSINIA'
         ? await resolveBoaReceipt(input.receiptToken)
-        : await resolveCbeReceipt(input.receiptToken);
+        : input.provider === 'DASHEN'
+          ? await resolveDashenReceipt(input.receiptToken)
+          : await resolveCbeReceipt(input.receiptToken);
     if (resolved.verificationStatus === 'VERIFIED') reference = resolved.reference;
   }
 

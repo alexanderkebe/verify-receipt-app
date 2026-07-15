@@ -49,7 +49,7 @@ export default function DashboardChrome({ user, children }: Props) {
           <span className="top-header-title">{user.businessName ?? 'Dashboard'}</span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="top-header-actions">
           <ThemeToggle />
           <div className="dropdown">
             <button className="flex items-center gap-2 btn btn-ghost" onClick={() => setMenuOpen((o) => !o)}>
