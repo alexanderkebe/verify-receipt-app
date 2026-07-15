@@ -93,11 +93,11 @@ export default function Home() {
       <header className={styles.nav}>
         <Link href="/" className={styles.brand}>
           <span className={styles.brandIcon}>R</span>
-          {APP_NAME}
+          <span className={styles.brandText}>{APP_NAME}</span>
         </Link>
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <Link href="/login" className="btn btn-ghost">
+          <Link href="/login" className="btn btn-ghost hide-mobile">
             Sign in
           </Link>
           <Link href="/register" className="btn btn-primary">
