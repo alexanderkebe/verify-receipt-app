@@ -38,13 +38,18 @@ export async function resolveDashenReceipt(token: string): Promise<NormalizedVer
   const afterPrefix = token.replace(/^superappreceipt_/i, '');
   const id = afterPrefix.split('.')[0] ?? afterPrefix;
 
-  // Candidate lookup URLs, most-likely first.
+  // api.dashensuperapp.com/receipts/<key> fronts an S3 bucket ("receiptprod").
+  // The raw token is NOT the stored object key — the object is keyed by the
+  // token with a file extension (the SuperApp writes a JSON/PDF blob). Try the
+  // likely key forms; S3 returns the object body directly on a hit.
+  const base = 'https://api.dashensuperapp.com/receipts';
   const candidates = [
-    `https://api.dashensuperapp.com/receipts/${encodeURIComponent(token)}`,
-    `https://receipt.dashensuperapp.com/receipts/${encodeURIComponent(token)}`,
-    `https://api.dashensuperapp.com/receipts/${encodeURIComponent(id)}`,
-    `https://api.dashensuperapp.com/api/receipts/${encodeURIComponent(token)}`,
-    `https://receipt.dashensuperapp.com/${encodeURIComponent(token)}`,
+    `${base}/${encodeURIComponent(token)}.json`,
+    `${base}/${encodeURIComponent(token)}/data.json`,
+    `${base}/${encodeURIComponent(id)}.json`,
+    `${base}/${encodeURIComponent(token)}.pdf`,
+    `${base}/${encodeURIComponent(id)}.pdf`,
+    `${base}/${encodeURIComponent(token)}`,
   ];
 
   const attempts: Attempt[] = [];
@@ -90,10 +95,16 @@ export async function resolveDashenReceipt(token: string): Promise<NormalizedVer
   }
 
   // Nothing resolved. In debug mode, surface what the API actually returned so
-  // the real contract can be wired up from a live scan.
+  // the real contract can be wired up from a live scan. 404s are the S3
+  // "NoSuchKey" XML (known) — collapse those to just the key ending, and show
+  // the full body only for any non-404 response worth reading.
   if (DASHEN_DEBUG) {
     const diag = attempts
-      .map((a) => `${shortHost(a.url)} → ${a.status}${a.contentType ? ` (${a.contentType.split(';')[0]})` : ''}: ${a.bodySnippet.replace(/\s+/g, ' ').trim()}`)
+      .map((a) => {
+        const key = keyEnding(a.url);
+        if (a.status === 404) return `${key}→404`;
+        return `${key}→${a.status}${a.contentType ? `(${a.contentType.split(';')[0]})` : ''}: ${a.bodySnippet.replace(/\s+/g, ' ').trim()}`;
+      })
       .join('  |  ');
     return createErrorResult('DASHEN', token, 'NOT_FOUND', `Dashen lookup diagnostic — ${diag || 'no responses'}`.slice(0, 900));
   }
@@ -133,13 +144,16 @@ function looksLikeJson(text: string): boolean {
   return t.startsWith('{') || t.startsWith('[');
 }
 
-function shortHost(url: string): string {
-  try {
-    const u = new URL(url);
-    return u.host.replace('.dashensuperapp.com', '') + u.pathname.replace(/\/[^/]+$/, '/…');
-  } catch {
-    return url;
-  }
+// The distinguishing part of a candidate URL: what comes after the token id,
+// e.g. ".json", "/data.json", ".pdf", or "" (raw). Lets the diagnostic show
+// which key form was tried without repeating the long token each time.
+function keyEnding(url: string): string {
+  const m = url.match(/receipts\/(.*)$/);
+  if (!m) return url;
+  const key = decodeURIComponent(m[1]);
+  // strip the known token/id prefix so only the distinguishing tail remains
+  const tail = key.replace(/^superappreceipt_[a-z0-9]+(\.[a-z0-9]+)?/i, '').replace(/^[a-z0-9]{16,}/i, '');
+  return tail || '<raw>';
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
