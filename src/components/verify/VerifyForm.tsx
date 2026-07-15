@@ -136,7 +136,9 @@ export default function VerifyForm() {
       // paths that work — a screenshot/photo of the receipt, or typing the
       // printed transaction number.
       const msg =
-        'This is a telebirr in-app QR — it can only be verified inside the telebirr app. Take a photo of the receipt or type the transaction number instead.';
+        selectedProvider === 'TELEBIRR'
+          ? 'This is a telebirr in-app QR — it can only be verified inside the telebirr app. Take a photo of the receipt or type the transaction number instead.'
+          : 'Could not read a receipt reference from this QR code. Type the reference manually or use the photo/upload tab instead.';
       // Functional update so re-detecting the same QR every frame doesn't re-render
       setScanNotice((prev) => (prev === msg ? prev : msg));
       return false;
@@ -157,36 +159,71 @@ export default function VerifyForm() {
     let frame = 0;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-    const tick = () => {
-      if (cancelled || !scanningRef.current) return;
-      const video = videoRef.current;
-      if (ctx && video && video.readyState >= 2 && video.videoWidth) {
-        const vw = video.videoWidth;
-        const vh = video.videoHeight;
-        // Crop to the centre square (where the scan frame guides the user) and
-        // read it at native resolution. Dense QRs (e.g. Telebirr) need the extra
-        // module resolution that downscaling the whole frame would destroy.
+    // Chrome/Android ships a native QR detector — the same engine the
+    // phone's built-in camera app uses. It reads glary, angled, or
+    // screen-displayed codes that jsQR misses, so prefer it when present.
+    interface NativeDetector {
+      detect: (source: CanvasImageSource) => Promise<Array<{ rawValue: string }>>;
+    }
+    interface BarcodeDetectorCtor {
+      new (options?: { formats?: string[] }): NativeDetector;
+      getSupportedFormats?: () => Promise<string[]>;
+    }
+    let nativeDetector: NativeDetector | null = null;
+
+    const decodeWithJsQr = (video: HTMLVideoElement): string | null => {
+      if (!ctx) return null;
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      // Cycle through three passes so every kind of code gets covered:
+      // the centre square at native resolution (dense QRs, e.g. Telebirr,
+      // need the module resolution), in both inversion modes, plus the
+      // whole frame downscaled (large codes or ones outside the guide).
+      const step = frame % 3;
+      frame++;
+      if (step === 1) {
+        const scale = Math.min(1, 800 / Math.max(vw, vh));
+        canvas.width = Math.round(vw * scale);
+        canvas.height = Math.round(vh * scale);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      } else {
         const cropSize = Math.round(Math.min(vw, vh) * 0.8);
         const sx = Math.round((vw - cropSize) / 2);
         const sy = Math.round((vh - cropSize) / 2);
         canvas.width = cropSize;
         canvas.height = cropSize;
         ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, cropSize, cropSize);
-        const image = ctx.getImageData(0, 0, cropSize, cropSize);
-        // Alternate inversion mode each frame so both dark- and light-background
-        // QR codes are covered without doubling per-frame work.
-        const code = jsQR(image.data, image.width, image.height, {
-          inversionAttempts: frame % 2 === 0 ? 'dontInvert' : 'onlyInvert',
-        });
-        frame++;
-        if (code?.data && handleQrDetected(code.data)) {
+      }
+      const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(image.data, image.width, image.height, {
+        inversionAttempts: step === 1 ? 'attemptBoth' : step === 0 ? 'dontInvert' : 'onlyInvert',
+      });
+      return code?.data ?? null;
+    };
+
+    const tick = async () => {
+      if (cancelled || !scanningRef.current) return;
+      const video = videoRef.current;
+      if (video && video.readyState >= 2 && video.videoWidth) {
+        let text: string | null = null;
+        if (nativeDetector) {
+          try {
+            const codes = await nativeDetector.detect(video);
+            text = codes.find((c) => c.rawValue)?.rawValue ?? null;
+          } catch {
+            nativeDetector = null; // detector failed at runtime — fall back to jsQR
+          }
+        }
+        if (!text) text = decodeWithJsQr(video);
+        if (cancelled || !scanningRef.current) return;
+        if (text && handleQrDetected(text)) {
           // Accepted — camera stopped, verification in flight
           scanningRef.current = false;
           return;
         }
         // Unreadable/unparseable QR: keep scanning
       }
-      rafId = requestAnimationFrame(tick);
+      rafId = requestAnimationFrame(() => void tick());
     };
 
     (async () => {
@@ -201,12 +238,33 @@ export default function VerifyForm() {
           return;
         }
         streamRef.current = stream;
+
+        // Ask the camera to keep refocusing — some Android browsers lock
+        // focus at arm's length and QR codes stay blurry forever, which is
+        // why the phone's camera app reads codes this scanner missed.
+        const track = stream.getVideoTracks()[0];
+        await track
+          ?.applyConstraints({
+            advanced: [{ focusMode: 'continuous' } as unknown as MediaTrackConstraintSet],
+          })
+          .catch(() => {}); // focusMode unsupported — keep the default
+
+        const BD = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
+        if (BD) {
+          try {
+            const formats = (await BD.getSupportedFormats?.()) ?? ['qr_code'];
+            if (formats.includes('qr_code')) nativeDetector = new BD({ formats: ['qr_code'] });
+          } catch {
+            nativeDetector = null;
+          }
+        }
+
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play().catch(() => {});
         }
         scanningRef.current = true;
-        rafId = requestAnimationFrame(tick);
+        rafId = requestAnimationFrame(() => void tick());
       } catch (err) {
         if (cancelled) return;
         const name = (err as Error)?.name;
@@ -507,8 +565,8 @@ export default function VerifyForm() {
             </div>
           </div>
           
-          {scanNotice && (
-            <div 
+          {(scanNotice || error) && (
+            <div
               style={{
                 position: 'absolute',
                 top: '90px',
@@ -517,7 +575,8 @@ export default function VerifyForm() {
                 zIndex: 1020,
               }}
             >
-              <div className="alert alert-warning m-0 shadow">{scanNotice}</div>
+              {error && <div className="alert alert-danger m-0 shadow mb-2">{error}</div>}
+              {scanNotice && <div className="alert alert-warning m-0 shadow">{scanNotice}</div>}
             </div>
           )}
         </div>
