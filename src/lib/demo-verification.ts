@@ -27,17 +27,19 @@ interface LiveDemoInput {
 
 export async function performLiveDemoVerification(input: LiveDemoInput) {
   const start = Date.now();
-  // Hosted receipt tokens (CBE mbreciept / BoA slip / Dashen SuperApp) resolve
-  // against the bank's own public API — no Verifier API key needed.
-  const apiResult = input.receiptToken
-    ? input.provider === 'ABYSSINIA'
-      ? await resolveBoaReceipt(input.receiptToken)
-      : input.provider === 'DASHEN'
-        ? await resolveDashenReceipt(input.receiptToken)
-        : await resolveCbeReceipt(input.receiptToken)
-    : input.provider
-      ? await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber)
-      : await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
+  // Dashen resolves from its public receipt page keyed by the transaction
+  // reference (not the in-app QR token). CBE/BoA hosted tokens resolve against
+  // their own bank API. All need no Verifier API key.
+  const apiResult =
+    input.provider === 'DASHEN'
+      ? await resolveDashenReceipt(input.reference)
+      : input.receiptToken
+        ? input.provider === 'ABYSSINIA'
+          ? await resolveBoaReceipt(input.receiptToken)
+          : await resolveCbeReceipt(input.receiptToken)
+        : input.provider
+          ? await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber)
+          : await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
   return toVerificationResult(apiResult, input.expectedAmount, start);
 }
 
@@ -95,7 +97,7 @@ function classify(
     return {
       resultLevel: 'YELLOW',
       resultReason:
-        apiResult.description?.startsWith('Dashen lookup diagnostic')
+        apiResult.description && apiResult.provider === 'DASHEN'
           ? apiResult.description
           : 'Transaction reference not found. The reference may be incorrect or the provider system may be delayed.',
     };

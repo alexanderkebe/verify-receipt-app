@@ -65,9 +65,15 @@ export function findReferenceInText(text: string): string | null {
   const ft = cleaned.match(/\bFT[A-Z0-9]{10}(?:[0-9]{8})?\b/i);
   if (ft) return ft[0].toUpperCase();
 
-  // Dashen reference on a receipt: a long alphanumeric with an embedded
-  // transaction code, e.g. 878WDTS252330002 (digits + a letter run + digits).
-  const dashen = cleaned.match(/\b[0-9]{2,4}[A-Z]{2,6}[0-9]{6,14}\b/);
+  // Dashen "Transaction Reference" specifically (prefer it over the longer
+  // "Transfer Reference" printed just below on the same receipt).
+  const dashenLabelled = cleaned.match(/Transaction\s+Reference\s*:?\s*([0-9A-Z]{10,20})/i);
+  if (dashenLabelled) return dashenLabelled[1].toUpperCase();
+
+  // Dashen reference shape on a receipt, e.g. 132WDTS26196000H or
+  // 878WDTS252330002 — digits, an embedded letter run, digits, optional
+  // trailing letter.
+  const dashen = cleaned.match(/\b[0-9]{2,4}[A-Z]{2,6}[0-9]{6,14}[A-Z]?\b/);
   if (dashen) return dashen[0].toUpperCase();
 
   // Labelled reference/receipt number (Telebirr, M-Pesa, Dashen…)

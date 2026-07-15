@@ -48,13 +48,17 @@ export async function performVerification(
   // and storage.
   let resolved: NormalizedVerificationResult | null = null;
   let reference = input.reference;
-  if (input.receiptToken) {
+  if (input.receiptToken && input.provider !== 'DASHEN') {
+    // CBE / BoA hosted-receipt tokens resolve against the bank's own API.
     resolved =
       input.provider === 'ABYSSINIA'
         ? await resolveBoaReceipt(input.receiptToken)
-        : input.provider === 'DASHEN'
-          ? await resolveDashenReceipt(input.receiptToken)
-          : await resolveCbeReceipt(input.receiptToken);
+        : await resolveCbeReceipt(input.receiptToken);
+    if (resolved.verificationStatus === 'VERIFIED') reference = resolved.reference;
+  } else if (input.provider === 'DASHEN') {
+    // Dashen resolves from the printed/typed transaction reference against its
+    // public receipt page — the in-app QR token is not verifiable.
+    resolved = await resolveDashenReceipt(input.reference);
     if (resolved.verificationStatus === 'VERIFIED') reference = resolved.reference;
   }
 
@@ -483,12 +487,13 @@ function classifyResult(
     };
   }
 
-  // YELLOW — Reference not found
+  // YELLOW — Reference not found. Prefer the resolver's own message when it
+  // gives a provider-specific hint (e.g. Dashen "upload the shared PDF").
   if (apiResult.verificationStatus === 'NOT_FOUND') {
     return {
       resultLevel: 'YELLOW',
       resultReason:
-        apiResult.description?.startsWith('Dashen lookup diagnostic')
+        apiResult.description && apiResult.provider === 'DASHEN'
           ? apiResult.description
           : 'Transaction reference not found. The reference may be incorrect or the provider system may be delayed.',
     };
