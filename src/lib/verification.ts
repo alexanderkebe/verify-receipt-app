@@ -7,6 +7,7 @@ import prisma from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { hashReference, maskReference } from '@/lib/crypto';
 import { verifyByReference, verifyUniversal, createErrorResult } from '@/lib/verifier-api';
+import { resolveCbeReceipt } from '@/lib/cbe-receipt';
 import { generateFraudAlerts } from '@/lib/fraud-detection';
 import { logAuditEvent, AuditActions } from '@/lib/audit';
 import type {
@@ -39,8 +40,18 @@ export async function performVerification(
   // 1. Check subscription limits
   await checkSubscriptionLimit(context.businessId);
 
+  // New-format CBE QRs carry a hosted-receipt token instead of the FT
+  // reference — resolve it against CBE's public receipt API first, so the
+  // real FT reference drives duplicate detection and storage.
+  let resolved: NormalizedVerificationResult | null = null;
+  let reference = input.reference;
+  if (input.cbeToken) {
+    resolved = await resolveCbeReceipt(input.cbeToken);
+    if (resolved.verificationStatus === 'VERIFIED') reference = resolved.reference;
+  }
+
   // 2. Check for duplicates BEFORE calling the API
-  const refHash = hashReference(input.reference);
+  const refHash = hashReference(reference);
   const duplicateInfo = await checkDuplicate(context.businessId, refHash);
 
   // 3. Call the external Verifier API — when the provider is known, use its
@@ -48,7 +59,9 @@ export async function performVerification(
   //    CBE references typed without a suffix fall back to the business's own
   //    registered CBE account suffixes (the receiver can query with theirs).
   let apiResult: NormalizedVerificationResult;
-  if (input.provider === 'CBE' && !input.suffix) {
+  if (resolved) {
+    apiResult = resolved;
+  } else if (input.provider === 'CBE' && !input.suffix) {
     apiResult = await verifyCbeWithRegisteredSuffix(context.businessId, input.reference);
   } else if (input.provider) {
     apiResult = await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber);
@@ -87,7 +100,7 @@ export async function performVerification(
       matchedAccountId: recipientMatch.accountId,
       provider,
       referenceHash: refHash,
-      referenceMasked: maskReference(input.reference),
+      referenceMasked: maskReference(reference),
       expectedAmount: input.expectedAmount,
       verifiedAmount: apiResult.amount,
       currency: apiResult.currency,
@@ -148,7 +161,7 @@ export async function performVerification(
     transactionStatus: apiResult.transactionStatus,
     resultLevel,
     resultReason,
-    referenceMasked: maskReference(input.reference),
+    referenceMasked: maskReference(reference),
     payerName: apiResult.payerName,
     recipientName: apiResult.recipientName,
     recipientAccountMasked: apiResult.recipientAccountMasked,

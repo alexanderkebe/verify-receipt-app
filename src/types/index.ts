@@ -118,6 +118,8 @@ export interface VerificationInput {
   suffix?: string;
   phoneNumber?: string;
   expectedAmount?: number;
+  /** Hosted CBE receipt token (new-format QR) — resolved via CBE's public API */
+  cbeToken?: string;
 }
 
 export interface ImageVerificationInput {

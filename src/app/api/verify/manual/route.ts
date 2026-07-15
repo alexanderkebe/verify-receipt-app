@@ -17,19 +17,22 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     // With an API key configured, demo mode still verifies against the real
     // Verifier API — only persistence and account matching are skipped.
-    if (hasLiveVerifier()) {
-      const parsed = manualVerificationSchema.safeParse(body);
-      if (!parsed.success) {
-        return fail(Object.values(fieldErrors(parsed.error))[0] ?? 'Invalid input');
-      }
+    // Hosted CBE receipt QRs verify live against CBE's own public API even
+    // without a Verifier API key.
+    const parsed = manualVerificationSchema.safeParse(body);
+    if (parsed.success) {
       const target = parseVerificationInput(parsed.data.input);
-      const result = await performLiveDemoVerification({
-        ...target,
-        // URL-derived provider wins; otherwise honour the user's selection
-        provider: target.provider ?? parsed.data.provider,
-        expectedAmount: parsed.data.expectedAmount,
-      });
-      return ok(result);
+      if (hasLiveVerifier() || target.cbeToken) {
+        const result = await performLiveDemoVerification({
+          ...target,
+          // URL-derived provider wins; otherwise honour the user's selection
+          provider: target.provider ?? parsed.data.provider,
+          expectedAmount: parsed.data.expectedAmount,
+        });
+        return ok(result);
+      }
+    } else if (hasLiveVerifier()) {
+      return fail(Object.values(fieldErrors(parsed.error))[0] ?? 'Invalid input');
     }
     return ok(makeDemoVerificationResult(body.input ?? 'REF0000', 'CBE', body.expectedAmount));
   }
@@ -52,6 +55,7 @@ export async function POST(req: NextRequest) {
         provider: target.provider ?? parsed.data.provider,
         reference: target.reference,
         suffix: target.suffix,
+        cbeToken: target.cbeToken,
         expectedAmount: parsed.data.expectedAmount,
       },
       {

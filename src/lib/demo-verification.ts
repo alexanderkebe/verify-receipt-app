@@ -7,6 +7,7 @@
 
 import { VERIFIER_API_KEY } from '@/lib/constants';
 import { verifyByReference, verifyUniversal } from '@/lib/verifier-api';
+import { resolveCbeReceipt } from '@/lib/cbe-receipt';
 import type { Provider, ResultLevel, NormalizedVerificationResult } from '@/types';
 
 export function hasLiveVerifier(): boolean {
@@ -19,13 +20,18 @@ interface LiveDemoInput {
   suffix?: string;
   phoneNumber?: string;
   expectedAmount?: number;
+  cbeToken?: string;
 }
 
 export async function performLiveDemoVerification(input: LiveDemoInput) {
   const start = Date.now();
-  const apiResult = input.provider
-    ? await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber)
-    : await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
+  // Hosted CBE receipt tokens resolve against CBE's own public API —
+  // no Verifier API key needed.
+  const apiResult = input.cbeToken
+    ? await resolveCbeReceipt(input.cbeToken)
+    : input.provider
+      ? await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber)
+      : await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
   return toVerificationResult(apiResult, input.expectedAmount, start);
 }
 

@@ -13,6 +13,8 @@ export interface ParsedReceiptInput {
   provider?: Provider;
   reference: string;
   suffix?: string;
+  /** Opaque token from a hosted CBE receipt URL (new-format mobile-banking QR) */
+  cbeToken?: string;
 }
 
 /**
@@ -23,6 +25,15 @@ export interface ParsedReceiptInput {
 export function findReceiptReference(raw: string): ParsedReceiptInput | null {
   const input = raw.trim();
   if (!input) return null;
+
+  // New-format CBE mobile-banking QR: a hosted receipt URL, e.g.
+  // https://mbreciept.cbe.com.et/v2-hfHCxzXoYDFuPxv0bhBg
+  // ("reciept" is CBE's own spelling — accept both.) The path is an opaque
+  // token that CBE's public receipt API resolves to the full transaction.
+  const cbeHosted = input.match(/mbrec(?:ie|ei)pt\.cbe\.com\.et(?::\d+)?\/([A-Za-z0-9_-]{8,64})/i);
+  if (cbeHosted) {
+    return { provider: 'CBE', reference: cbeHosted[1], cbeToken: cbeHosted[1] };
+  }
 
   // CBE receipt URL, e.g. https://apps.cbe.com.et:100/?id=FT26123ABC1212345678
   // The id is the 12-char FT reference with the 8-digit account suffix appended.
