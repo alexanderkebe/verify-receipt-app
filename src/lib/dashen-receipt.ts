@@ -3,14 +3,16 @@
 //
 // Dashen SuperApp receipt QRs encode a token of the form
 //   superappreceipt_<id>.<verifier>
-// which the official viewer at https://www.dashensuperapp.com/receipts/<token>
-// resolves against Dashen's hosted receipt API. We call that API directly to
-// pull the authoritative transaction record. No Verifier API key involved.
+// resolved by Dashen's hosted receipt service. The public receipt URL seen in
+// the wild is https://api.dashensuperapp.com/receipts/<token>.
 //
-// The API host (api.dashensuperapp.com) is Ethiopian-hosted and geo-restricted,
-// so field extraction is defensive: the exact JSON shape is not publicly
-// documented, and we normalise across the likely key spellings the way the
-// CBE/Verifier layers do.
+// The exact response contract is not publicly documented and the host is
+// Ethiopian-hosted (unreachable from many networks), so this resolver:
+//   - tries several id/host forms,
+//   - extracts fields defensively across likely key spellings,
+//   - and, when it can't map a record, surfaces a compact diagnostic of what
+//     the API actually returned so the field mapping can be finalised from a
+//     real scan. Set DASHEN_DEBUG=false to silence the diagnostic.
 // ============================================
 
 import { VERIFICATION_CONFIG } from '@/lib/constants';
@@ -18,90 +20,133 @@ import { createErrorResult } from '@/lib/verifier-api';
 import { maskReference } from '@/lib/crypto';
 import type { NormalizedVerificationResult } from '@/types';
 
-// The receipt token's hosted API. The viewer fetches the same path the token
-// is embedded in; both the API host and the www viewer accept the full token.
-const DASHEN_RECEIPT_ENDPOINTS = [
-  'https://api.dashensuperapp.com/receipts/',
-  'https://www.dashensuperapp.com/api/receipts/',
-];
+const DASHEN_DEBUG = process.env.DASHEN_DEBUG !== 'false';
+
+interface Attempt {
+  url: string;
+  status: number | 'network-error' | 'timeout';
+  contentType: string;
+  bodySnippet: string;
+}
 
 /**
  * Resolve a Dashen SuperApp receipt token to a verification result.
  * `token` is the full `superappreceipt_<id>.<verifier>` string from the QR.
  */
 export async function resolveDashenReceipt(token: string): Promise<NormalizedVerificationResult> {
-  let lastStatus = 0;
-  for (const base of DASHEN_RECEIPT_ENDPOINTS) {
+  // token = superappreceipt_<id>.<verifier>
+  const afterPrefix = token.replace(/^superappreceipt_/i, '');
+  const id = afterPrefix.split('.')[0] ?? afterPrefix;
+
+  // Candidate lookup URLs, most-likely first.
+  const candidates = [
+    `https://api.dashensuperapp.com/receipts/${encodeURIComponent(token)}`,
+    `https://receipt.dashensuperapp.com/receipts/${encodeURIComponent(token)}`,
+    `https://api.dashensuperapp.com/receipts/${encodeURIComponent(id)}`,
+    `https://api.dashensuperapp.com/api/receipts/${encodeURIComponent(token)}`,
+    `https://receipt.dashensuperapp.com/${encodeURIComponent(token)}`,
+  ];
+
+  const attempts: Attempt[] = [];
+
+  for (const url of candidates) {
     try {
-      const response = await fetch(`${base}${encodeURIComponent(token)}`, {
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
-          Accept: 'application/json',
+          Accept: 'application/json, text/plain, */*',
           'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36',
           Referer: 'https://www.dashensuperapp.com/',
         },
         signal: AbortSignal.timeout(VERIFICATION_CONFIG.apiTimeoutMs),
       });
 
-      if (response.status === 404) {
-        return createErrorResult('DASHEN', token, 'NOT_FOUND', 'Dashen does not recognise this receipt. The QR code may be invalid or the receipt may have expired.');
-      }
-      if (!response.ok) {
-        lastStatus = response.status;
-        continue; // try the next host
-      }
-
-      // Guard against the viewer's HTML shell being served instead of JSON
       const contentType = response.headers.get('content-type') ?? '';
-      if (!contentType.includes('json')) {
-        lastStatus = response.status;
+      const text = await response.text();
+      attempts.push({ url, status: response.status, contentType, bodySnippet: text.slice(0, 400) });
+
+      if (!response.ok) continue;
+      if (!/json/i.test(contentType) && !looksLikeJson(text)) continue;
+
+      let json: unknown;
+      try {
+        json = JSON.parse(text);
+      } catch {
         continue;
       }
 
-      const data = unwrap(await response.json());
-      const reference = extract(data, ['reference', 'referenceNo', 'reference_no', 'transactionReference', 'transactionId', 'transaction_id', 'txnId', 'receiptNumber', 'traceNumber']) ?? token;
-
-      return {
-        provider: 'DASHEN',
-        verificationStatus: 'VERIFIED',
-        transactionStatus: normalizeStatus(extract(data, ['status', 'transactionStatus', 'state'])),
-        reference: reference.toUpperCase(),
-        referenceMasked: maskReference(reference),
-        payerName: extract(data, ['payerName', 'payer_name', 'senderName', 'sender_name', 'debitAccountHolder', 'from', 'payer']),
-        recipientName: extract(data, ['recipientName', 'recipient_name', 'receiverName', 'receiver_name', 'creditAccountHolder', 'to', 'receiver']),
-        recipientAccount: extract(data, ['recipientAccount', 'recipient_account', 'receiverAccount', 'receiver_account', 'recipientNumber', 'creditAccountNo', 'creditAccount']),
-        recipientAccountMasked: null,
-        amount: extractNumber(data, ['amount', 'transactionAmount', 'transaction_amount', 'debitAmount', 'totalAmount', 'value']),
-        currency: extract(data, ['currency', 'currencyCode']) ?? 'ETB',
-        transactionDate: extract(data, ['date', 'transactionDate', 'transaction_date', 'paymentDate', 'createdAt', 'timestamp']),
-        receiptNumber: reference.toUpperCase(),
-        description: extract(data, ['reason', 'description', 'narrative', 'serviceType', 'service_type', 'paymentReason']),
-        fees: extractNumber(data, ['fee', 'fees', 'serviceCharge', 'service_charge', 'charge', 'totalFees']),
-        rawResponse: (data ?? {}) as Record<string, unknown>,
-      };
+      const result = normalizeDashen(token, unwrap(json));
+      if (result) return result;
+      // Parsed JSON but couldn't find a reference — record and keep trying
     } catch (error) {
       const name = (error as Error)?.name;
-      if (name === 'AbortError' || name === 'TimeoutError') {
-        return createErrorResult('DASHEN', token, 'TIMEOUT', 'Dashen receipt lookup timed out. The bank service may be temporarily unavailable — try again in a moment.');
-      }
-      // network error — try the next host
+      attempts.push({
+        url,
+        status: name === 'AbortError' || name === 'TimeoutError' ? 'timeout' : 'network-error',
+        contentType: '',
+        bodySnippet: (error as Error)?.message?.slice(0, 120) ?? '',
+      });
     }
   }
 
-  return createErrorResult(
-    'DASHEN',
-    token,
-    'ERROR',
-    lastStatus
-      ? `Dashen receipt lookup failed (${lastStatus}). Please try again.`
-      : 'Unable to reach the Dashen receipt service. Please try again.',
-  );
+  // Nothing resolved. In debug mode, surface what the API actually returned so
+  // the real contract can be wired up from a live scan.
+  if (DASHEN_DEBUG) {
+    const diag = attempts
+      .map((a) => `${shortHost(a.url)} → ${a.status}${a.contentType ? ` (${a.contentType.split(';')[0]})` : ''}: ${a.bodySnippet.replace(/\s+/g, ' ').trim()}`)
+      .join('  |  ');
+    return createErrorResult('DASHEN', token, 'NOT_FOUND', `Dashen lookup diagnostic — ${diag || 'no responses'}`.slice(0, 900));
+  }
+
+  return createErrorResult('DASHEN', token, 'NOT_FOUND', 'Dashen does not recognise this receipt. The QR code may be invalid or the receipt may have expired.');
+}
+
+function normalizeDashen(token: string, data: unknown): NormalizedVerificationResult | null {
+  const reference = extract(data, ['reference', 'referenceNo', 'reference_no', 'transactionReference', 'transactionId', 'transaction_id', 'txnId', 'receiptNumber', 'traceNumber', 'id']);
+  const amount = extractNumber(data, ['amount', 'transactionAmount', 'transaction_amount', 'debitAmount', 'totalAmount', 'value']);
+  // Require at least a reference or an amount to consider this a real record
+  if (reference == null && amount == null) return null;
+  const ref = (reference ?? token).toUpperCase();
+
+  return {
+    provider: 'DASHEN',
+    verificationStatus: 'VERIFIED',
+    transactionStatus: normalizeStatus(extract(data, ['status', 'transactionStatus', 'state'])),
+    reference: ref,
+    referenceMasked: maskReference(ref),
+    payerName: extract(data, ['payerName', 'payer_name', 'senderName', 'sender_name', 'debitAccountHolder', 'from', 'payer']),
+    recipientName: extract(data, ['recipientName', 'recipient_name', 'receiverName', 'receiver_name', 'creditAccountHolder', 'to', 'receiver', 'recipientNumber']),
+    recipientAccount: extract(data, ['recipientAccount', 'recipient_account', 'receiverAccount', 'receiver_account', 'recipientNumber', 'creditAccountNo', 'creditAccount']),
+    recipientAccountMasked: null,
+    amount,
+    currency: extract(data, ['currency', 'currencyCode']) ?? 'ETB',
+    transactionDate: extract(data, ['date', 'transactionDate', 'transaction_date', 'paymentDate', 'createdAt', 'timestamp']),
+    receiptNumber: ref,
+    description: extract(data, ['reason', 'description', 'narrative', 'serviceType', 'service_type', 'paymentReason']),
+    fees: extractNumber(data, ['fee', 'fees', 'serviceCharge', 'service_charge', 'charge', 'totalFees']),
+    rawResponse: (data ?? {}) as Record<string, unknown>,
+  };
+}
+
+function looksLikeJson(text: string): boolean {
+  const t = text.trim();
+  return t.startsWith('{') || t.startsWith('[');
+}
+
+function shortHost(url: string): string {
+  try {
+    const u = new URL(url);
+    return u.host.replace('.dashensuperapp.com', '') + u.pathname.replace(/\/[^/]+$/, '/…');
+  } catch {
+    return url;
+  }
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // The API may wrap the record in { data } / { result } / { receipt } / { body:[…] }
 function unwrap(json: any): any {
   if (json == null || typeof json !== 'object') return json;
+  if (Array.isArray(json)) return json[0] ?? json;
   if (Array.isArray(json.body)) return json.body[0] ?? json;
   return json.data ?? json.result ?? json.receipt ?? json.transaction ?? json;
 }
@@ -110,7 +155,7 @@ function extract(data: any, keys: string[]): string | null {
   if (!data || typeof data !== 'object') return null;
   for (const key of keys) {
     const v = data[key];
-    if (v != null && v !== '') return String(v);
+    if (v != null && v !== '' && typeof v !== 'object') return String(v);
   }
   return null;
 }

@@ -94,7 +94,10 @@ function classify(
   if (apiResult.verificationStatus === 'NOT_FOUND') {
     return {
       resultLevel: 'YELLOW',
-      resultReason: 'Transaction reference not found. The reference may be incorrect or the provider system may be delayed.',
+      resultReason:
+        apiResult.description?.startsWith('Dashen lookup diagnostic')
+          ? apiResult.description
+          : 'Transaction reference not found. The reference may be incorrect or the provider system may be delayed.',
     };
   }
 
