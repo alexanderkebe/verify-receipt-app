@@ -40,18 +40,19 @@ export function findReceiptReference(raw: string): ParsedReceiptInput | null {
     return { provider: 'CBE', reference: cbeHosted[1], receiptToken: cbeHosted[1], providerCertain: true };
   }
 
-  // Bank of Abyssinia receipt QR: a hosted slip URL, e.g.
-  // https://cs.bankofabyssinia.com/slip/?trx=FT26196XXKC9...
-  // The slip page passes the trx value verbatim to BoA's public API, so we
-  // keep the whole token (it can carry more than the bare FT reference).
-  const boaUrl = input.match(/bankofabyssinia\.com[^?#]*\?[^#]*\btrx=([A-Za-z0-9_-]{6,64})/i);
-  if (boaUrl) {
-    const token = boaUrl[1];
-    const upper = token.toUpperCase();
+  // Bank of Abyssinia receipt QR: the app's receipt QR is an AES-encrypted
+  // CSV of the transaction (base64 ciphertext), not a URL. It's decrypted
+  // server-side (see boa-receipt.ts) — here we just recognise the shape and
+  // pass the payload through as the token. Older BoA receipts use a hosted
+  // slip URL with the same ciphertext in a `trx` param, so accept both.
+  const boaFromUrl = input.match(/bankofabyssinia\.com[^?#]*[?&]trx=([^&#\s]+)/i);
+  const boaPayload = boaFromUrl ? safeDecodeURIComponent(boaFromUrl[1]) : input;
+  if (looksLikeBoaCipher(boaPayload)) {
     return {
       provider: 'ABYSSINIA',
-      reference: /^FT/.test(upper) && upper.length > 12 ? upper.slice(0, 12) : upper,
-      receiptToken: token,
+      // Provisional display value until the server decrypts the real ref
+      reference: 'BOA-RECEIPT',
+      receiptToken: boaPayload,
       providerCertain: true,
     };
   }
@@ -114,6 +115,34 @@ export function findReceiptReference(raw: string): ParsedReceiptInput | null {
   }
 
   return null;
+}
+
+/**
+ * Cheap client-side gate: does this look like a BoA-encrypted receipt QR?
+ * (base64 whose decoded length is a whole number of AES blocks). The actual
+ * proof is the server-side decryption in boa-receipt.ts — this only routes
+ * the payload there and must not fire on ordinary references or URLs.
+ */
+function looksLikeBoaCipher(value: string): boolean {
+  const s = value.trim();
+  // Pure base64, no URL/query/whitespace, and long enough to be a full record.
+  // BoA's QR text carries no padding, so validate the decoded byte count
+  // (must be a whole number of 16-byte AES-CBC blocks) rather than the
+  // raw string length.
+  if (!/^[A-Za-z0-9+/]{80,}={0,2}$/.test(s)) return false;
+  const unpadded = s.replace(/=+$/, '').length;
+  const bytes = Math.floor((unpadded * 3) / 4);
+  // A valid base64 group leaves remainder 0, 2, or 3 chars (never 1)
+  if (unpadded % 4 === 1) return false;
+  return bytes >= 16 && bytes % 16 === 0; // AES-CBC ciphertext is block-aligned
+}
+
+function safeDecodeURIComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 function normalizeBare(value: string): ParsedReceiptInput {
