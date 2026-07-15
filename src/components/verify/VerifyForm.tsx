@@ -143,6 +143,14 @@ export default function VerifyForm() {
       setScanNotice((prev) => (prev === msg ? prev : msg));
       return false;
     }
+    if (parsed.appOnly) {
+      // App-internal QR (Dashen SuperApp): no public endpoint can verify it.
+      // Point the cashier at the flow that works — the shared PDF receipt.
+      const msg =
+        'This is a Dashen SuperApp in-app QR — it can only be opened in the SuperApp. In Dashen, tap Share on the receipt to save the PDF, then use the Photo / upload tab here to upload it.';
+      setScanNotice((prev) => (prev === msg ? prev : msg));
+      return false;
+    }
     stopCamera();
     setInput(parsed.reference);
     void runVerification(t, selectedProvider ?? undefined);
@@ -674,7 +682,7 @@ export default function VerifyForm() {
                 <input
                   ref={galleryInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,application/pdf"
                   style={{ display: 'none' }}
                   onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
                 />
@@ -691,23 +699,43 @@ export default function VerifyForm() {
                     className="btn btn-secondary w-full"
                     onClick={() => galleryInputRef.current?.click()}
                   >
-                    🖼 Choose image
+                    🖼 Image or PDF
                   </button>
                 </div>
                 {filePreview && (
                   <div className="flex items-center gap-3 mt-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={filePreview}
-                      alt="Selected receipt"
-                      style={{
-                        width: 64,
-                        height: 64,
-                        objectFit: 'cover',
-                        borderRadius: 8,
-                        border: '1px solid var(--color-border)',
-                      }}
-                    />
+                    {file?.type === 'application/pdf' ? (
+                      <div
+                        style={{
+                          width: 64,
+                          height: 64,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: 8,
+                          border: '1px solid var(--color-border)',
+                          background: 'var(--color-surface-2, #f4f4f5)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: 'var(--color-text-secondary)',
+                        }}
+                      >
+                        PDF
+                      </div>
+                    ) : (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={filePreview}
+                        alt="Selected receipt"
+                        style={{
+                          width: 64,
+                          height: 64,
+                          objectFit: 'cover',
+                          borderRadius: 8,
+                          border: '1px solid var(--color-border)',
+                        }}
+                      />
+                    )}
                     <div style={{ minWidth: 0 }}>
                       <div className="text-sm font-medium truncate">{file?.name ?? 'Photo'}</div>
                       <button
@@ -722,7 +750,8 @@ export default function VerifyForm() {
                   </div>
                 )}
                 <span className="input-help">
-                  The QR code or reference number is read on your device — the photo is never uploaded.
+                  Upload a photo, screenshot, or PDF receipt (e.g. the Dashen SuperApp receipt) — the
+                  QR code or reference number is read on your device and the file is never uploaded.
                 </span>
               </div>
               <div className="input-group mb-6">

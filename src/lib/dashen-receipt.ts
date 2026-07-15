@@ -20,7 +20,11 @@ import { createErrorResult } from '@/lib/verifier-api';
 import { maskReference } from '@/lib/crypto';
 import type { NormalizedVerificationResult } from '@/types';
 
-const DASHEN_DEBUG = process.env.DASHEN_DEBUG !== 'false';
+// The Dashen SuperApp receipt QR is an app-internal token with no public
+// endpoint (its bucket returns NoSuchKey) — the app routes Dashen receipts
+// through the shared PDF instead. This resolver stays as a best-effort
+// fallback; its diagnostic is opt-in via DASHEN_DEBUG=true.
+const DASHEN_DEBUG = process.env.DASHEN_DEBUG === 'true';
 
 interface Attempt {
   url: string;

@@ -20,6 +20,10 @@ export interface ParsedReceiptInput {
    *  URL). Bare FT references are ambiguous (CBE and BoA both use them), so
    *  without this flag the user's provider selection should win. */
   providerCertain?: boolean;
+  /** True for an app-internal QR that no public endpoint can verify (e.g.
+   *  the Dashen SuperApp receipt QR). The cashier must upload the shared
+   *  PDF / type the printed reference instead of scanning. */
+  appOnly?: boolean;
 }
 
 /**
@@ -64,12 +68,17 @@ export function findReceiptReference(raw: string): ParsedReceiptInput | null {
   const dashenUrl = input.match(/dashensuperapp\.com\/receipts?\/([^/?#\s]+)/i);
   const dashenToken = dashenUrl ? safeDecodeURIComponent(dashenUrl[1]) : input;
   if (/^superappreceipt_[A-Za-z0-9]+\.[A-Za-z0-9]+$/i.test(dashenToken)) {
+    // The Dashen SuperApp receipt QR is an app-internal token — the data sits
+    // behind the SuperApp's login and no public endpoint resolves it. The
+    // cashier must upload the shared PDF (its printed reference is read
+    // on-device) or type the reference. Flag it so the UI can say so instead
+    // of attempting a lookup that always fails.
     return {
       provider: 'DASHEN',
-      // Provisional display value until the server resolves the real ref
       reference: 'DASHEN-RECEIPT',
       receiptToken: dashenToken,
       providerCertain: true,
+      appOnly: true,
     };
   }
 
