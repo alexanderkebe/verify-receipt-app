@@ -23,13 +23,13 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={rows} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#2A3444" />
         <XAxis dataKey="label" stroke="#64748B" fontSize={12} />
         <YAxis stroke="#64748B" fontSize={12} allowDecimals={false} />
         <Tooltip
           contentStyle={{
             background: '#1E293B',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid #475569',
             borderRadius: 8,
             color: '#F1F5F9',
           }}
@@ -59,7 +59,7 @@ export function ProviderChart({ data }: { data: ProviderStat[] }) {
         <Tooltip
           contentStyle={{
             background: '#1E293B',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid #475569',
             borderRadius: 8,
             color: '#F1F5F9',
           }}

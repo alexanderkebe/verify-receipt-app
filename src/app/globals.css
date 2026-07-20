@@ -27,11 +27,11 @@
   --color-bg-active: #314463;
   --color-bg-input: #080D16;
 
-  /* Surface & Glass - Dark Mode */
-  --color-surface: rgba(18, 24, 36, 0.6);
-  --color-glass: rgba(11, 15, 25, 0.55);
-  --color-glass-border: rgba(255, 255, 255, 0.08);
-  --color-glass-hover: rgba(25, 33, 48, 0.7);
+  /* Opaque surfaces - Dark Mode */
+  --color-surface: #121824;
+  --color-glass: #0F1622;
+  --color-glass-border: #2A3444;
+  --color-glass-hover: #192130;
 
   /* Text - Dark Mode */
   --color-text-primary: #F3F4F6;
@@ -43,21 +43,21 @@
   /* Accent - Dark Mode */
   --color-accent: #F5A623;
   --color-accent-hover: #FFB944;
-  --color-accent-subtle: rgba(245, 166, 35, 0.12);
+  --color-accent-subtle: #2D2922;
 
   /* Status Colors — Verification Results - Dark Mode */
   --color-status-green: #10B981;
-  --color-status-green-bg: rgba(16, 185, 129, 0.12);
-  --color-status-green-border: rgba(16, 185, 129, 0.25);
+  --color-status-green-bg: #122B2F;
+  --color-status-green-border: #12664E;
   --color-status-red: #EF4444;
-  --color-status-red-bg: rgba(239, 68, 68, 0.12);
-  --color-status-red-border: rgba(239, 68, 68, 0.25);
+  --color-status-red-bg: #2E1D25;
+  --color-status-red-border: #5A2A32;
   --color-status-yellow: #F5A623;
-  --color-status-yellow-bg: rgba(245, 166, 35, 0.12);
-  --color-status-yellow-border: rgba(245, 166, 35, 0.25);
+  --color-status-yellow-bg: #2D2922;
+  --color-status-yellow-border: #594526;
   --color-status-blue: #3B82F6;
-  --color-status-blue-bg: rgba(59, 130, 246, 0.12);
-  --color-status-blue-border: rgba(59, 130, 246, 0.25);
+  --color-status-blue-bg: #17293E;
+  --color-status-blue-border: #244A7C;
 
   /* Severity Colors */
   --color-severity-info: #3B82F6;
@@ -66,9 +66,9 @@
   --color-severity-critical: #EF4444;
 
   /* Borders - Dark Mode */
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-subtle: rgba(255, 255, 255, 0.04);
-  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-border: #2A3444;
+  --color-border-subtle: #202A39;
+  --color-border-strong: #475569;
   --color-border-focus: var(--color-accent);
 
   /* Shadows */
@@ -156,11 +156,11 @@
   --color-bg-active: #DFE5F0;
   --color-bg-input: #F8FAFC;
 
-  /* Surface & Glass - Light Mode */
-  --color-surface: rgba(255, 255, 255, 0.45);
-  --color-glass: rgba(255, 255, 255, 0.4);
-  --color-glass-border: rgba(255, 255, 255, 0.5);
-  --color-glass-hover: rgba(255, 255, 255, 0.6);
+  /* Opaque surfaces - Light Mode */
+  --color-surface: #FFFFFF;
+  --color-glass: #FFFFFF;
+  --color-glass-border: #D7DEE9;
+  --color-glass-hover: #F3F5FA;
 
   /* Text - Light Mode */
   --color-text-primary: #0F172A;
@@ -172,26 +172,26 @@
   /* Accent - Light Mode */
   --color-accent: #C7851A;
   --color-accent-hover: #F5A623;
-  --color-accent-subtle: rgba(199, 133, 26, 0.1);
+  --color-accent-subtle: #F7EEDD;
 
   /* Status Colors — Verification Results - Light Mode */
   --color-status-green: #059669;
-  --color-status-green-bg: rgba(5, 150, 105, 0.08);
-  --color-status-green-border: rgba(5, 150, 105, 0.2);
+  --color-status-green-bg: #EBF7F3;
+  --color-status-green-border: #B4DFD1;
   --color-status-red: #DC2626;
-  --color-status-red-bg: rgba(220, 38, 38, 0.08);
-  --color-status-red-border: rgba(220, 38, 38, 0.2);
+  --color-status-red-bg: #FDEEEE;
+  --color-status-red-border: #F3BABA;
   --color-status-yellow: #D97706;
-  --color-status-yellow-bg: rgba(217, 119, 6, 0.08);
-  --color-status-yellow-border: rgba(217, 119, 6, 0.2);
+  --color-status-yellow-bg: #FCF5EB;
+  --color-status-yellow-border: #EFD6B5;
   --color-status-blue: #2563EB;
-  --color-status-blue-bg: rgba(37, 99, 235, 0.08);
-  --color-status-blue-border: rgba(37, 99, 235, 0.2);
+  --color-status-blue-bg: #EDF2FD;
+  --color-status-blue-border: #C2D1F7;
 
   /* Borders - Light Mode */
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-subtle: rgba(0, 0, 0, 0.04);
-  --color-border-strong: rgba(0, 0, 0, 0.15);
+  --color-border: #D7DEE9;
+  --color-border-subtle: #E5EAF1;
+  --color-border-strong: #AEB8C7;
 
   /* Shadows - Light Mode */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -204,7 +204,7 @@
   --shadow-glass-glow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
 
-/* ---- Liquid Glass Background Blobs ---- */
+/* ---- Solid application background ---- */
 .liquid-bg {
   position: fixed;
   inset: 0;
@@ -218,17 +218,11 @@
 }
 
 .liquid-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.18;
-  will-change: transform;
-  transition: opacity var(--transition-slow);
+  display: none;
 }
 
 [data-theme='light'] .liquid-blob {
-  opacity: 0.14;
-  filter: blur(120px);
+  display: none;
 }
 
 .liquid-blob-1 {
@@ -401,7 +395,6 @@ ul, ol {
   background: var(--color-glass);
   color: var(--color-text-primary);
   border-color: var(--color-glass-border);
-  backdrop-filter: blur(12px);
 }
 .btn-secondary:hover {
   background: var(--color-glass-hover);
@@ -462,8 +455,6 @@ ul, ol {
   background: var(--color-surface);
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-xl);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
   box-shadow: var(--shadow-glass-glow);
   transition: all var(--transition-base);
 }
@@ -596,8 +587,6 @@ ul, ol {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-glass-border);
   background: var(--color-surface);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
   box-shadow: var(--shadow-glass-glow);
 }
 .table {
@@ -632,8 +621,7 @@ ul, ol {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: #05070C;
   z-index: var(--z-modal-backdrop);
   display: flex;
   align-items: center;
@@ -712,7 +700,6 @@ ul, ol {
   background: var(--color-surface);
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-xl);
-  backdrop-filter: blur(16px);
   transition: all var(--transition-base);
 }
 .stat-card:hover {
@@ -751,8 +738,6 @@ ul, ol {
   height: 100vh;
   height: 100dvh;
   background: var(--color-surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
@@ -763,7 +748,7 @@ ul, ol {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: #05070C;
   z-index: calc(var(--z-sticky) - 1);
   border: none;
   padding: 0;
@@ -879,8 +864,6 @@ ul, ol {
   right: 0;
   height: var(--header-height);
   background: var(--color-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--color-border);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
   display: flex;
@@ -1009,17 +992,17 @@ ul, ol {
   animation: fadeIn var(--transition-base);
 }
 .result-card-green {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+  background: var(--color-status-green-bg);
   border: 2px solid var(--color-status-green-border);
   box-shadow: var(--shadow-glow-green);
 }
 .result-card-red {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+  background: var(--color-status-red-bg);
   border: 2px solid var(--color-status-red-border);
   box-shadow: var(--shadow-glow-red);
 }
 .result-card-yellow {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+  background: var(--color-status-yellow-bg);
   border: 2px solid var(--color-status-yellow-border);
   box-shadow: var(--shadow-glow-gold);
 }
@@ -1544,8 +1527,6 @@ ul, ol {
 .provider-card {
   background: var(--color-glass);
   border: 1px solid var(--color-glass-border);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: var(--radius-xl);
   padding: var(--space-4);
   display: flex;
@@ -1650,7 +1631,6 @@ ul, ol {
   justify-content: space-between;
   background: var(--color-glass);
   border: 1px solid var(--color-glass-border);
-  backdrop-filter: blur(12px);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-6);
@@ -1755,7 +1735,7 @@ ul, ol {
 }
 
 .cbe-back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #334155;
 }
 
 .abyssinia-theme .cbe-back-btn {
@@ -1763,7 +1743,7 @@ ul, ol {
 }
 
 .abyssinia-theme .cbe-back-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: #D19B00;
 }
 
 .cbe-header-title {
@@ -2049,7 +2029,7 @@ ul, ol {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle, transparent 130px, rgba(0, 0, 0, 0.5) 131px);
+  background: radial-gradient(circle, transparent 130px, #000000 131px);
 }
 
 /* Top bar with circle buttons */
@@ -2068,19 +2048,18 @@ ul, ol {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(18, 18, 18, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #121212;
+  border: 1px solid #475569;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(12px);
 }
 
 .scanner-circle-btn:hover {
-  background: rgba(18, 18, 18, 0.9);
+  background: #242424;
   transform: scale(1.05);
 }
 
@@ -2167,14 +2146,13 @@ ul, ol {
   position: absolute;
   bottom: 140px;
   padding: 8px 18px;
-  background: rgba(18, 18, 18, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #121212;
+  border: 1px solid #475569;
   border-radius: var(--radius-full);
   color: #ffffff;
   font-size: var(--font-size-xs);
   font-weight: 500;
   z-index: 1510;
-  backdrop-filter: blur(10px);
   letter-spacing: 0.01em;
 }
 
@@ -2192,9 +2170,8 @@ ul, ol {
 .scanner-tabs-container .tabs {
   width: 100%;
   margin-bottom: 0 !important;
-  background: rgba(18, 18, 18, 0.8) !important;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  background: #121212 !important;
+  border: 1px solid #475569 !important;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
 
@@ -2204,7 +2181,7 @@ ul, ol {
 
 .scanner-tabs-container .tab:hover {
   color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.05);
+  background: #2A2A2A;
 }
 
 .scanner-tabs-container .tab.active {

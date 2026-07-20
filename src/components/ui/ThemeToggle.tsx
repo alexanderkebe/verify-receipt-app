@@ -26,7 +26,6 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
         height: '40px',
         background: 'var(--color-glass)',
         border: '1px solid var(--color-glass-border)',
-        backdropFilter: 'blur(12px)',
         color: 'var(--color-text-primary)',
         cursor: 'pointer',
         transition: 'all var(--transition-base)',

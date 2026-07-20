@@ -10,10 +10,7 @@
   flex-direction: column;
   justify-content: space-between;
   padding: var(--space-10);
-  background:
-    radial-gradient(circle at 20% 20%, rgba(245, 166, 35, 0.12), transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(46, 204, 113, 0.1), transparent 40%),
-    var(--color-bg-secondary);
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-bg-tertiary));
   border-right: 1px solid var(--color-border);
   overflow: hidden;
 }
