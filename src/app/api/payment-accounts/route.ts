@@ -6,6 +6,7 @@ import { requireRole, ok, fail, handleError } from '@/lib/api-helpers';
 import { isDemoMode, demoPaymentAccounts } from '@/lib/demo-data';
 import { encrypt, maskAccountNumber } from '@/lib/crypto';
 import { logAuditEvent, AuditActions, extractRequestMeta } from '@/lib/audit';
+import { normalizeEthiopianMobile } from '@/lib/recipient-matching';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,14 @@ export async function POST(req: NextRequest) {
       return fail(Object.values(fieldErrors(parsed.error))[0] ?? 'Invalid input');
     }
     const data = parsed.data;
+    const normalizedTelebirrPhone =
+      data.provider === 'TELEBIRR'
+        ? normalizeEthiopianMobile(data.phoneNumber || data.accountNumber)
+        : null;
+    const phoneNumber =
+      data.provider === 'TELEBIRR' && normalizedTelebirrPhone
+        ? `251${normalizedTelebirrPhone}`
+        : data.phoneNumber || null;
 
     const account = await prisma.paymentAccount.create({
       data: {
@@ -58,7 +67,7 @@ export async function POST(req: NextRequest) {
         accountNumberEncrypted: encrypt(data.accountNumber),
         accountNumberMasked: maskAccountNumber(data.accountNumber),
         suffix: data.suffix || null,
-        phoneNumber: data.phoneNumber || null,
+        phoneNumber,
         nickname: data.nickname || null,
         status: 'ACTIVE',
       },

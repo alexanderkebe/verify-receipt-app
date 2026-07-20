@@ -79,15 +79,27 @@ export const employeeSchema = z.object({
 });
 
 // ---- Payment Accounts ----
-export const paymentAccountSchema = z.object({
-  provider: providerSchema,
-  accountHolderName: z.string().trim().min(2, 'Account holder name is required'),
-  accountNumber: z.string().trim().min(4, 'Account number is required'),
-  suffix: z.string().trim().optional(),
-  phoneNumber: z.string().trim().optional(),
-  nickname: z.string().trim().optional(),
-  branchId: z.string().uuid().optional().nullable(),
-});
+export const paymentAccountSchema = z
+  .object({
+    provider: providerSchema,
+    accountHolderName: z.string().trim().min(2, 'Account holder name is required'),
+    accountNumber: z.string().trim().min(4, 'Account number is required'),
+    suffix: z.string().trim().optional(),
+    phoneNumber: z.string().trim().optional(),
+    nickname: z.string().trim().optional(),
+    branchId: z.string().uuid().optional().nullable(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.provider !== 'TELEBIRR') return;
+    const phone = (val.phoneNumber || val.accountNumber).replace(/[^0-9]/g, '');
+    if (!/^(251|0)?9\d{8}$/.test(phone)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['accountNumber'],
+        message: 'Enter the full Ethiopian Telebirr phone number',
+      });
+    }
+  });
 
 // ---- Verification ----
 // A single free-form input: reference number or receipt URL.

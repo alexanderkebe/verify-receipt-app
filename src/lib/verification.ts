@@ -7,13 +7,17 @@ import { after } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import prisma from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
-import { hashReference, maskReference } from '@/lib/crypto';
+import { decrypt, hashReference, maskReference } from '@/lib/crypto';
 import { verifyByReference, verifyUniversal, createErrorResult } from '@/lib/verifier-api';
 import { resolveCbeReceipt } from '@/lib/cbe-receipt';
 import { resolveBoaReceipt } from '@/lib/boa-receipt';
 import { resolveDashenReceipt } from '@/lib/dashen-receipt';
 import { generateFraudAlerts } from '@/lib/fraud-detection';
 import { logAuditEvent, AuditActions } from '@/lib/audit';
+import {
+  matchRecipientAgainstAccounts,
+  type RecipientMatchResult,
+} from '@/lib/recipient-matching';
 import type {
   Provider,
   ResultLevel,
@@ -72,7 +76,7 @@ export async function performVerification(
   if (matchAccounts === null && apiResult.verificationStatus === 'VERIFIED') {
     matchAccounts = await fetchMatchAccounts(context.businessId, context.branchId, provider);
   }
-  const recipientMatch = matchRecipient(matchAccounts ?? [], apiResult);
+  const recipientMatch = matchRecipient(provider, matchAccounts ?? [], apiResult);
 
   // 6. Compare amounts
   const amountMatch = compareAmounts(input.expectedAmount, apiResult.amount);
@@ -428,11 +432,6 @@ async function checkDuplicate(
   };
 }
 
-interface RecipientMatchResult {
-  matches: boolean | null;
-  accountId: string | null;
-}
-
 /** Active accounts for a provider, scoped to business/branch */
 async function fetchMatchAccounts(
   businessId: string,
@@ -453,6 +452,8 @@ async function fetchMatchAccounts(
       accountNumberMasked: true,
       accountHolderName: true,
       phoneNumber: true,
+      // Needed for the legacy-Telebirr decrypt fallback in matchRecipient
+      accountNumberEncrypted: true,
     },
   });
 }
@@ -460,6 +461,7 @@ async function fetchMatchAccounts(
 type MatchAccount = Awaited<ReturnType<typeof fetchMatchAccounts>>[number];
 
 function matchRecipient(
+  provider: Provider,
   accounts: MatchAccount[],
   apiResult: NormalizedVerificationResult,
 ): RecipientMatchResult {
@@ -467,47 +469,33 @@ function matchRecipient(
     return { matches: null, accountId: null };
   }
 
-  if (accounts.length === 0) {
-    return { matches: false, accountId: null };
-  }
-
-  // Check if any registered account matches the recipient from the API response
-  const recipientAccount = apiResult.recipientAccount;
-  const recipientName = apiResult.recipientName?.toLowerCase().trim();
-
-  for (const account of accounts) {
-    // Match by account number suffix
-    if (recipientAccount && account.accountNumberMasked) {
-      const accountSuffix = account.accountNumberMasked.replace(/\*/g, '');
-      if (recipientAccount.endsWith(accountSuffix)) {
-        return { matches: true, accountId: account.id };
+  const matchableAccounts = accounts.map((account) => {
+    let phoneNumber = account.phoneNumber;
+    // Accounts created before Telebirr phone normalization may only have the
+    // full number in the encrypted account-number field. Read it in memory for
+    // matching without exposing or persisting the plaintext.
+    if (provider === 'TELEBIRR' && !phoneNumber) {
+      try {
+        phoneNumber = decrypt(account.accountNumberEncrypted);
+      } catch {
+        phoneNumber = null;
       }
     }
 
-    // Match by account holder name (fuzzy)
-    if (recipientName && account.accountHolderName) {
-      const holderName = account.accountHolderName.toLowerCase().trim();
-      if (
-        recipientName === holderName ||
-        recipientName.includes(holderName) ||
-        holderName.includes(recipientName)
-      ) {
-        return { matches: true, accountId: account.id };
-      }
-    }
+    return {
+      id: account.id,
+      accountNumberMasked: account.accountNumberMasked,
+      accountHolderName: account.accountHolderName,
+      phoneNumber,
+    };
+  });
 
-    // Match by phone number (for mobile money)
-    if (recipientAccount && account.phoneNumber) {
-      const normalizedRecipient = recipientAccount.replace(/[^0-9]/g, '');
-      const normalizedPhone = account.phoneNumber.replace(/[^0-9]/g, '');
-      if (normalizedRecipient === normalizedPhone || normalizedRecipient.endsWith(normalizedPhone.slice(-9))) {
-        return { matches: true, accountId: account.id };
-      }
-    }
-  }
-
-  // No match found
-  return { matches: false, accountId: null };
+  return matchRecipientAgainstAccounts(
+    provider,
+    apiResult.recipientAccount,
+    apiResult.recipientName,
+    matchableAccounts,
+  );
 }
 
 interface AmountMatchResult {
@@ -597,7 +585,7 @@ function classifyResult(
 
   // GREEN — All checks passed
   if (apiResult.verificationStatus === 'VERIFIED' &&
-      (recipientMatch.matches === true || recipientMatch.matches === null) &&
+      recipientMatch.matches === true &&
       (amountMatch.matches === true || amountMatch.matches === null)) {
     return {
       resultLevel: 'GREEN',
@@ -614,4 +602,3 @@ function classifyResult(
     resultReason: 'This receipt requires manual review. Some verification details could not be confirmed automatically.',
   };
 }
-
