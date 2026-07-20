@@ -241,7 +241,7 @@ function buildRequestBody(
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-function normalizeResponse(
+export function normalizeResponse(
   provider: Provider,
   reference: string,
   data: any,
@@ -252,6 +252,17 @@ function normalizeResponse(
   const isSuccess = determineSuccess(data);
   const txStatus = determineTransactionStatus(data);
 
+  const recipientAccount = extractField(data, [
+    'creditedPartyAccountNo',
+    'creditedPartyAccount',
+    'receiverTelebirrNo',
+    'receiverAccount',
+    'receiver_account',
+    'recipientAccount',
+    'recipient_account',
+    'creditedAccount',
+  ]);
+
   return {
     provider,
     verificationStatus: isSuccess ? 'VERIFIED' : 'INVALID',
@@ -260,14 +271,14 @@ function normalizeResponse(
     referenceMasked: maskRef(reference),
     payerName: extractField(data, ['payerName', 'payer_name', 'senderName', 'sender_name', 'from', 'payer']),
     recipientName: extractField(data, ['receiverName', 'receiver_name', 'recipientName', 'recipient_name', 'creditedPartyName', 'to', 'receiver']),
-    recipientAccount: extractField(data, ['receiverAccount', 'receiver_account', 'recipientAccount', 'recipient_account', 'creditedAccount']),
-    recipientAccountMasked: null, // Will be masked after extraction
+    recipientAccount,
+    recipientAccountMasked: maskAccount(recipientAccount),
     amount: extractNumber(data, ['amount', 'settledAmount', 'settled_amount', 'transactionAmount', 'transaction_amount', 'totalAmount']),
     currency: 'ETB',
     transactionDate: extractField(data, ['date', 'transactionDate', 'transaction_date', 'paymentDate', 'payment_date', 'createdAt']),
-    receiptNumber: extractField(data, ['receiptNumber', 'receipt_number', 'transactionRef', 'transaction_ref', 'referenceNumber']),
+    receiptNumber: extractField(data, ['receiptNo', 'receiptNumber', 'receipt_number', 'transactionRef', 'transaction_ref', 'referenceNumber']),
     description: extractField(data, ['description', 'reason', 'narrative', 'paymentReason', 'payment_reason']),
-    fees: extractNumber(data, ['fee', 'fees', 'serviceCharge', 'service_charge', 'totalFees']),
+    fees: extractNumber(data, ['serviceFee', 'fee', 'fees', 'serviceCharge', 'service_charge', 'totalFees']),
     rawResponse: data,
   };
 }
@@ -275,13 +286,22 @@ function normalizeResponse(
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function determineSuccess(data: any): boolean {
-  // Check various success indicators
-  if (data.status === 'success' || data.status === 'SUCCESS' || data.status === true) return true;
-  if (data.success === true) return true;
-  if (data.verified === true) return true;
-  if (data.transactionStatus === 'SUCCESS' || data.transactionStatus === 'COMPLETED') return true;
-  if (data.data && (data.data.status === 'success' || data.data.success === true)) return true;
-  return false;
+  if (data.success === true || data.verified === true || data.data?.success === true) return true;
+
+  const statuses = [
+    data.status,
+    data.transactionStatus,
+    data.data?.status,
+    data.data?.transactionStatus,
+    data.result?.status,
+    data.result?.transactionStatus,
+  ];
+
+  return statuses.some((status) => {
+    if (status === true) return true;
+    const normalized = String(status ?? '').trim().toUpperCase();
+    return ['SUCCESS', 'SUCCESSFUL', 'COMPLETED'].includes(normalized);
+  });
 }
 
 function determineTransactionStatus(data: any): TransactionStatus {
@@ -363,6 +383,13 @@ export function createErrorResult(
 function maskRef(reference: string): string {
   if (!reference || reference.length <= 8) return reference;
   return `${reference.slice(0, 4)}****${reference.slice(-4)}`;
+}
+
+function maskAccount(account: string | null): string | null {
+  if (!account) return null;
+  const compact = account.replace(/\s/g, '');
+  if (compact.length <= 4) return '*'.repeat(compact.length);
+  return `${'*'.repeat(Math.max(4, compact.length - 4))}${compact.slice(-4)}`;
 }
 
 function delay(ms: number): Promise<void> {

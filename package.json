@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
+    "test": "tsx --test tests/telebirr-recipient.test.ts",
     "lint": "eslint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
