@@ -28,6 +28,7 @@ export async function generateFraudAlerts(
   verificationId: string,
   businessId: string,
   input: FraudCheckInput,
+  employeeId: string,
 ): Promise<void> {
   const alerts: AlertToCreate[] = [];
 
@@ -68,7 +69,7 @@ export async function generateFraudAlerts(
   }
 
   // Rule 5: Check for repeated failures by the same employee (async, non-blocking)
-  await checkRepeatedFailures(verificationId, businessId, alerts);
+  await checkRepeatedFailures(employeeId, businessId, alerts);
 
   // Create all alerts
   if (alerts.length > 0) {
@@ -89,29 +90,33 @@ export async function generateFraudAlerts(
  * Check if an employee has had repeated verification failures recently
  */
 async function checkRepeatedFailures(
-  verificationId: string,
+  employeeId: string,
   businessId: string,
   alerts: AlertToCreate[],
 ): Promise<void> {
   try {
-    // Get the employee from this verification
-    const verification = await prisma.receiptVerification.findUnique({
-      where: { id: verificationId },
-      select: { employeeId: true },
-    });
-
-    if (!verification) return;
-
-    // Count recent RED results by this employee in the last hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const recentFailures = await prisma.receiptVerification.count({
-      where: {
-        businessId,
-        employeeId: verification.employeeId,
-        resultLevel: 'RED',
-        createdAt: { gte: oneHourAgo },
-      },
-    });
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // Recent RED results by this employee (last hour) and supervisor
+    // overrides by anyone (last 24h) — independent counts, run together.
+    const [recentFailures, recentOverrides] = await Promise.all([
+      prisma.receiptVerification.count({
+        where: {
+          businessId,
+          employeeId,
+          resultLevel: 'RED',
+          createdAt: { gte: oneHourAgo },
+        },
+      }),
+      prisma.receiptVerification.count({
+        where: {
+          businessId,
+          overrideByUserId: { not: null },
+          overrideAt: { gte: oneDayAgo },
+        },
+      }),
+    ]);
 
     if (recentFailures >= 5) {
       alerts.push({
@@ -120,16 +125,6 @@ async function checkRepeatedFailures(
         description: `Employee has ${recentFailures} failed verifications in the last hour. This may indicate suspicious activity or process issues.`,
       });
     }
-
-    // Check for repeated supervisor overrides by any supervisor in the last 24 hours
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recentOverrides = await prisma.receiptVerification.count({
-      where: {
-        businessId,
-        overrideByUserId: { not: null },
-        overrideAt: { gte: oneDayAgo },
-      },
-    });
 
     if (recentOverrides >= 10) {
       alerts.push({

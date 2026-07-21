@@ -3,6 +3,8 @@
 // Implements the full verification workflow from SRS Section 7
 // ============================================
 
+import { after } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import prisma from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { hashReference, maskReference } from '@/lib/crypto';
@@ -39,56 +41,38 @@ export async function performVerification(
 ): Promise<VerificationResult> {
   const startTime = Date.now();
 
-  // 1. Check subscription limits
-  await checkSubscriptionLimit(context.businessId);
+  // 1. Check subscription limits; hosted-receipt tokens resolve concurrently
+  //    (they hit the banks' public receipt endpoints, not the metered
+  //    Verifier API — that call is still gated behind the limit check).
+  const [, resolved] = await Promise.all([
+    checkSubscriptionLimit(context.businessId),
+    resolveHostedReceipt(input),
+  ]);
+  const reference =
+    resolved?.verificationStatus === 'VERIFIED' ? resolved.reference : input.reference;
 
-  // Hosted-receipt QRs (CBE mbreciept / BoA slip) carry an opaque token
-  // instead of the FT reference — resolve it against the bank's public
-  // receipt API first, so the real FT reference drives duplicate detection
-  // and storage.
-  let resolved: NormalizedVerificationResult | null = null;
-  let reference = input.reference;
-  if (input.receiptToken && input.provider !== 'DASHEN') {
-    // CBE / BoA hosted-receipt tokens resolve against the bank's own API.
-    resolved =
-      input.provider === 'ABYSSINIA'
-        ? await resolveBoaReceipt(input.receiptToken)
-        : await resolveCbeReceipt(input.receiptToken);
-    if (resolved.verificationStatus === 'VERIFIED') reference = resolved.reference;
-  } else if (input.provider === 'DASHEN') {
-    // Dashen resolves from the printed/typed transaction reference against its
-    // public receipt page — the in-app QR token is not verifiable.
-    resolved = await resolveDashenReceipt(input.reference);
-    if (resolved.verificationStatus === 'VERIFIED') reference = resolved.reference;
-  }
-
-  // 2. Check for duplicates BEFORE calling the API
+  // 2+3. Neither the duplicate check nor the recipient-account prefetch
+  //      gates the external Verifier API call — run all three concurrently
+  //      so the DB round trips hide behind the (much slower) external lookup.
   const refHash = hashReference(reference);
-  const duplicateInfo = await checkDuplicate(context.businessId, refHash);
-
-  // 3. Call the external Verifier API — when the provider is known, use its
-  //    dedicated endpoint; otherwise let the universal endpoint auto-detect.
-  //    CBE references typed without a suffix fall back to the business's own
-  //    registered CBE account suffixes (the receiver can query with theirs).
-  let apiResult: NormalizedVerificationResult;
-  if (resolved) {
-    apiResult = resolved;
-  } else if (input.provider === 'CBE' && !input.suffix) {
-    apiResult = await verifyCbeWithRegisteredSuffix(context.businessId, input.reference);
-  } else if (input.provider) {
-    apiResult = await verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber);
-  } else {
-    apiResult = await verifyUniversal(input.reference, input.suffix, input.phoneNumber);
-  }
+  const knownProvider = resolved?.provider ?? input.provider ?? null;
+  const [duplicateInfo, apiResult, prefetchedAccounts] = await Promise.all([
+    checkDuplicate(context.businessId, refHash),
+    callVerifierApi(input, resolved, context.businessId),
+    knownProvider
+      ? fetchMatchAccounts(context.businessId, context.branchId, knownProvider)
+      : Promise.resolve(null),
+  ]);
   const provider = apiResult.provider;
 
-  // 5. Match recipient against registered business accounts
-  const recipientMatch = await matchRecipient(
-    context.businessId,
-    context.branchId,
-    provider,
-    apiResult,
-  );
+  // 5. Match recipient against registered business accounts. The prefetched
+  //    list only applies when the API confirmed the provider we prefetched
+  //    for (the universal endpoint may detect a different one).
+  let matchAccounts = knownProvider === provider ? prefetchedAccounts : null;
+  if (matchAccounts === null && apiResult.verificationStatus === 'VERIFIED') {
+    matchAccounts = await fetchMatchAccounts(context.businessId, context.branchId, provider);
+  }
+  const recipientMatch = matchRecipient(matchAccounts ?? [], apiResult);
 
   // 6. Compare amounts
   const amountMatch = compareAmounts(input.expectedAmount, apiResult.amount);
@@ -134,36 +118,50 @@ export async function performVerification(
     },
   });
 
-  // 9. Increment subscription usage
-  await incrementVerificationCount(context.businessId);
-
-  // 10. Generate fraud alerts if needed
-  await generateFraudAlerts(verification.id, context.businessId, {
-    resultLevel,
-    recipientMatches: recipientMatch.matches,
-    amountMatches: amountMatch.matches,
-    isDuplicate: duplicateInfo !== null,
-    verificationStatus: apiResult.verificationStatus,
-    transactionStatus: apiResult.transactionStatus,
-  });
-
-  // 11. Audit log
-  await logAuditEvent({
-    businessId: context.businessId,
-    userId: context.employeeId,
-    action: AuditActions.VERIFICATION_COMPLETED,
-    entityType: 'ReceiptVerification',
-    entityId: verification.id,
-    newValues: {
-      provider,
-      resultLevel,
-      resultReason,
-      isDuplicate: duplicateInfo !== null,
-      recipientMatches: recipientMatch.matches,
-      amountMatches: amountMatch.matches,
-    },
-    ipAddress: context.ipAddress,
-    userAgent: context.userAgent,
+  // 9–11. Usage increment, fraud alerts, and audit log are independent and
+  // not read by the response — run them after it is sent. after() maps to
+  // waitUntil on Vercel, so the function stays alive until they finish.
+  after(async () => {
+    try {
+      await Promise.all([
+        incrementVerificationCount(context.businessId),
+        generateFraudAlerts(
+          verification.id,
+          context.businessId,
+          {
+            resultLevel,
+            recipientMatches: recipientMatch.matches,
+            amountMatches: amountMatch.matches,
+            isDuplicate: duplicateInfo !== null,
+            verificationStatus: apiResult.verificationStatus,
+            transactionStatus: apiResult.transactionStatus,
+          },
+          context.employeeId,
+        ),
+        logAuditEvent({
+          businessId: context.businessId,
+          userId: context.employeeId,
+          action: AuditActions.VERIFICATION_COMPLETED,
+          entityType: 'ReceiptVerification',
+          entityId: verification.id,
+          newValues: {
+            provider,
+            resultLevel,
+            resultReason,
+            isDuplicate: duplicateInfo !== null,
+            recipientMatches: recipientMatch.matches,
+            amountMatches: amountMatch.matches,
+          },
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        }),
+      ]);
+    } catch (error) {
+      console.error('Post-verification bookkeeping failed:', error);
+    }
+    // Bust the cached dashboard stats so the new verification (and any
+    // fraud alerts) show up immediately instead of after the 60s TTL.
+    revalidateTag(`dashboard:${context.businessId}`, 'max');
   });
 
   return {
@@ -205,6 +203,7 @@ export async function recordDecision(
 ): Promise<void> {
   const verification = await prisma.receiptVerification.findFirst({
     where: { id: verificationId, businessId },
+    select: { id: true, employeeDecision: true },
   });
 
   if (!verification) {
@@ -245,6 +244,7 @@ export async function recordOverride(
 ): Promise<void> {
   const verification = await prisma.receiptVerification.findFirst({
     where: { id: verificationId, businessId },
+    select: { id: true, employeeDecision: true, resultLevel: true },
   });
 
   if (!verification) {
@@ -312,13 +312,58 @@ async function verifyCbeWithRegisteredSuffix(
     );
   }
 
-  let last: NormalizedVerificationResult | null = null;
-  for (const suffix of suffixes) {
-    const result = await verifyByReference('CBE', reference, suffix);
-    if (result.verificationStatus === 'VERIFIED') return result;
-    last = result;
+  // Each suffix is a full external lookup — run them concurrently (the
+  // helper never rejects; it returns error results) and take the first
+  // VERIFIED hit, else surface the last attempt's result.
+  const results = await Promise.all(
+    suffixes.map((suffix) => verifyByReference('CBE', reference, suffix)),
+  );
+  return (
+    results.find((r) => r.verificationStatus === 'VERIFIED') ?? results[results.length - 1]
+  );
+}
+
+/**
+ * Hosted-receipt QRs (CBE mbreciept / BoA slip) carry an opaque token
+ * instead of the FT reference — resolve it against the bank's public
+ * receipt API so the real reference drives duplicate detection and
+ * storage. Dashen resolves from the printed/typed transaction reference
+ * against its public receipt page — the in-app QR token is not verifiable.
+ */
+async function resolveHostedReceipt(
+  input: VerificationInput,
+): Promise<NormalizedVerificationResult | null> {
+  if (input.receiptToken && input.provider !== 'DASHEN') {
+    return input.provider === 'ABYSSINIA'
+      ? resolveBoaReceipt(input.receiptToken)
+      : resolveCbeReceipt(input.receiptToken);
   }
-  return last!;
+  if (input.provider === 'DASHEN') {
+    return resolveDashenReceipt(input.reference);
+  }
+  return null;
+}
+
+/**
+ * Call the external Verifier API — when the provider is known, use its
+ * dedicated endpoint; otherwise let the universal endpoint auto-detect.
+ * CBE references typed without a suffix fall back to the business's own
+ * registered CBE account suffixes (the receiver can query with theirs).
+ * Receipts already resolved against a bank's own API skip the call.
+ */
+async function callVerifierApi(
+  input: VerificationInput,
+  resolved: NormalizedVerificationResult | null,
+  businessId: string,
+): Promise<NormalizedVerificationResult> {
+  if (resolved) return resolved;
+  if (input.provider === 'CBE' && !input.suffix) {
+    return verifyCbeWithRegisteredSuffix(businessId, input.reference);
+  }
+  if (input.provider) {
+    return verifyByReference(input.provider, input.reference, input.suffix, input.phoneNumber);
+  }
+  return verifyUniversal(input.reference, input.suffix, input.phoneNumber);
 }
 
 async function checkSubscriptionLimit(businessId: string): Promise<void> {
@@ -358,7 +403,12 @@ async function checkDuplicate(
       referenceHash,
       employeeDecision: 'ACCEPTED',
     },
-    include: {
+    select: {
+      id: true,
+      createdAt: true,
+      resultLevel: true,
+      employeeDecision: true,
+      verifiedAmount: true,
       employee: { select: { fullName: true } },
       branch: { select: { name: true } },
     },
@@ -383,18 +433,13 @@ interface RecipientMatchResult {
   accountId: string | null;
 }
 
-async function matchRecipient(
+/** Active accounts for a provider, scoped to business/branch */
+async function fetchMatchAccounts(
   businessId: string,
   branchId: string | undefined,
   provider: Provider,
-  apiResult: NormalizedVerificationResult,
-): Promise<RecipientMatchResult> {
-  if (apiResult.verificationStatus !== 'VERIFIED') {
-    return { matches: null, accountId: null };
-  }
-
-  // Get active accounts for this provider, scoped to business/branch
-  const accounts = await prisma.paymentAccount.findMany({
+) {
+  return prisma.paymentAccount.findMany({
     where: {
       businessId,
       provider,
@@ -403,7 +448,24 @@ async function matchRecipient(
         ? [{ branchId: null }, { branchId }]
         : [{ branchId: null }],
     },
+    select: {
+      id: true,
+      accountNumberMasked: true,
+      accountHolderName: true,
+      phoneNumber: true,
+    },
   });
+}
+
+type MatchAccount = Awaited<ReturnType<typeof fetchMatchAccounts>>[number];
+
+function matchRecipient(
+  accounts: MatchAccount[],
+  apiResult: NormalizedVerificationResult,
+): RecipientMatchResult {
+  if (apiResult.verificationStatus !== 'VERIFIED') {
+    return { matches: null, accountId: null };
+  }
 
   if (accounts.length === 0) {
     return { matches: false, accountId: null };
