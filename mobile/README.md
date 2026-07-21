@@ -28,6 +28,21 @@ npm start          # then press "a" for Android, or scan the QR with Expo Go
 Requires [Expo Go](https://expo.dev/go) on the phone (same Wi-Fi as the
 computer), or an Android emulator.
 
+> **First install needs a stable connection.** The Expo dependency tree is
+> large (~1,200 packages). On a flaky link, `npm install` can fail partway
+> with `ECONNRESET`, and on Windows an antivirus/indexer can lock files
+> mid-extraction (`EPERM`/`lstat` errors). If that happens:
+>
+> ```bash
+> # close editors/AV scans on the folder, then:
+> rm -rf node_modules
+> npm install --prefer-offline --fetch-retries 15
+> ```
+>
+> `--prefer-offline` reuses whatever landed in npm's cache on earlier
+> attempts, so each retry downloads less. Once it completes, run
+> `npm run typecheck` to confirm the app compiles before launching.
+
 ### Pointing at a different backend
 
 The API base URL lives in `app.json` → `expo.extra.apiBaseUrl` (defaults to the

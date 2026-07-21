@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthContext';
-import { Button, ErrorBanner, Input, Label, Screen, Subtitle, Title } from '@/components/ui';
+import { Button, ErrorBanner, Input, Label, Screen, Subtitle } from '@/components/ui';
 import { spacing, useTheme } from '@/theme';
 
 export default function LoginScreen() {
