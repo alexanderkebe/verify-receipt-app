@@ -49,3 +49,11 @@ next-env.d.ts
 public/*inspo*/
 public/dashin/
 public/mpesa/
+
+# mobile (Expo) build artifacts
+/mobile/node_modules
+/mobile/.expo
+/mobile/dist
+/mobile/android
+/mobile/ios
+/mobile/*.log

@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "ReceiptGuard",
+    "slug": "receiptguard",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "receiptguard",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0B0F19",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "et.receiptguard.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0F19"
+      },
+      "permissions": ["android.permission.CAMERA"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ReceiptGuard uses the camera to scan receipt QR codes and photograph receipts."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ReceiptGuard needs access to your photos so you can verify a receipt you already saved."
+        }
+      ]
+    ],
+    "extra": {
+      "apiBaseUrl": "https://verify-receipt-app.vercel.app",
+      "router": {}
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

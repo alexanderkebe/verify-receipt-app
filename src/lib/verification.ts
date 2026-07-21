@@ -163,9 +163,10 @@ export async function performVerification(
     } catch (error) {
       console.error('Post-verification bookkeeping failed:', error);
     }
-    // Bust the cached dashboard stats so the new verification (and any
-    // fraud alerts) show up immediately instead of after the 60s TTL.
+    // Bust the cached dashboard + employee stats so the new verification
+    // (and any fraud alerts) show up immediately instead of after the 60s TTL.
     revalidateTag(`dashboard:${context.businessId}`, 'max');
+    revalidateTag(`me-stats:${context.employeeId}`, 'max');
   });
 
   return {
@@ -234,6 +235,10 @@ export async function recordDecision(
     entityId: verificationId,
     newValues: { decision, reason },
   });
+
+  // Decisions feed the rejected/decision counters in both stat caches.
+  revalidateTag(`dashboard:${businessId}`, 'max');
+  revalidateTag(`me-stats:${userId}`, 'max');
 }
 
 /**
