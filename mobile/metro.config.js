@@ -19,4 +19,25 @@ config.resolver.nodeModulesPaths = [
 // resolves from the repo root.
 config.resolver.disableHierarchicalLookup = true;
 
+config.resolver.extraNodeModules = {
+  // The app's own source
+  '@': path.resolve(projectRoot, 'src'),
+  // Shared web-app modules (receipt parsing rules)
+  '@shared': path.resolve(repoRoot, 'src'),
+};
+
+// The shared modules import `@/types` (a Next.js path alias). Only types are
+// used, so redirect it to a runtime-empty shim rather than pulling the web
+// app's Next/NextAuth type surface into the bundle.
+const sharedTypesShim = path.resolve(projectRoot, 'src/lib/shared-types.ts');
+const upstreamResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === '@/types' && context.originModulePath.startsWith(path.resolve(repoRoot, 'src'))) {
+    return { type: 'sourceFile', filePath: sharedTypesShim };
+  }
+  return upstreamResolveRequest
+    ? upstreamResolveRequest(context, moduleName, platform)
+    : context.resolveRequest(context, moduleName, platform);
+};
+
 module.exports = config;
