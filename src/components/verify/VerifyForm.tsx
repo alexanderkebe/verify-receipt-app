@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { PROVIDER_LABELS, PROVIDER_COLORS, type Provider, type VerificationResult } from '@/types';
+import { PROVIDER_LABELS, type Provider, type VerificationResult } from '@/types';
 import { findReceiptReference } from '@/lib/receipt-input';
 import { getJsQr } from '@/lib/image-extract';
 import ResultCard from './ResultCard';
@@ -23,15 +23,6 @@ const PROVIDER_THEME_LOGOS: Record<Provider, string> = {
   ...PROVIDER_LOGOS,
   DASHEN: '/providers/dashen-white.png',
   ABYSSINIA: '/providers/abyssinia-white.png',
-};
-
-const PROVIDER_SUBTITLES: Record<Provider, string> = {
-  CBE: 'Bank',
-  TELEBIRR: 'Mobile Wallet',
-  DASHEN: 'Bank',
-  ABYSSINIA: 'Bank',
-  CBE_BIRR: 'Mobile Wallet',
-  MPESA: 'Mobile Wallet',
 };
 
 const PROVIDER_HELP_TEXTS: Record<Provider, string> = {
