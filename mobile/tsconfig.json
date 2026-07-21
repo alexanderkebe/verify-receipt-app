@@ -3,6 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
+      // `@/types` must precede `@/*` — the shared web modules import it for
+      // erased types only, and it resolves to a mobile-safe shim (matching
+      // the redirect in metro.config.js).
+      "@/types": ["./src/lib/shared-types.ts"],
       "@/*": ["./src/*"],
       "@shared/*": ["../src/*"]
     }

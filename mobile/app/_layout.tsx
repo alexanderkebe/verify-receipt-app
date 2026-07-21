@@ -18,7 +18,8 @@ function AuthGate() {
   useEffect(() => {
     if (status === 'loading') return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const path = segments as string[];
+    const inAuthGroup = path[0] === '(auth)';
 
     if (status === 'signedOut') {
       if (!inAuthGroup) router.replace('/(auth)/login');
@@ -27,7 +28,7 @@ function AuthGate() {
 
     // Signed in but still on a boss-issued temp password
     if (user?.mustChangePassword) {
-      if (segments[1] !== 'change-password') router.replace('/(auth)/change-password');
+      if (path[1] !== 'change-password') router.replace('/(auth)/change-password');
       return;
     }
 

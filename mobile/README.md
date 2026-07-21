@@ -42,6 +42,11 @@ computer), or an Android emulator.
 > `--prefer-offline` reuses whatever landed in npm's cache on earlier
 > attempts, so each retry downloads less. Once it completes, run
 > `npm run typecheck` to confirm the app compiles before launching.
+>
+> **No lockfile is committed yet** for that reason — the installs available so
+> far were interrupted, so any `package-lock.json` would describe a partial
+> tree. Once `npm install` finishes cleanly on a stable connection, commit the
+> lockfile it produces.
 
 ### Pointing at a different backend
 
