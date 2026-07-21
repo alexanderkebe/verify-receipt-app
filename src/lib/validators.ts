@@ -67,6 +67,26 @@ export const businessJoinSchema = z.object({
 });
 export type BusinessJoinInput = z.infer<typeof businessJoinSchema>;
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: passwordSchema,
+});
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().trim().length(64, 'This password reset link is invalid'),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, 'Confirm your new password'),
+  })
+  .refine((value) => value.newPassword === value.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'Passwords do not match',
+  });
+
 // ---- Employees ----
 export const employeeSchema = z.object({
   fullName: z.string().trim().min(2, 'Full name is required'),

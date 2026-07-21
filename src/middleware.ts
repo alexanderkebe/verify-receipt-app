@@ -14,6 +14,7 @@ const PUBLIC_PREFIXES = [
   '/login',
   '/register',
   '/forgot-password',
+  '/reset-password',
   '/verify-email',
   '/api/business/register',
   '/api/business/join',
@@ -56,6 +57,14 @@ export default auth((req) => {
 
   // From here on, a session is required
   if (!loggedIn) {
+    // API clients (the mobile app) need a machine-readable 401 —
+    // redirecting them to the login page returns HTML they can't use.
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 },
+      );
+    }
     const url = new URL('/login', req.nextUrl);
     url.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(url);
