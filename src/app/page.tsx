@@ -97,12 +97,12 @@ export default function Home() {
           <span className={styles.brandIcon}>R</span>
           <span className={styles.brandText}>{APP_NAME}</span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className={styles.navActions}>
           <ThemeToggle />
-          <Link href="/login" className="btn btn-ghost hide-mobile">
+          <Link href="/login" className={`btn btn-secondary ${styles.navButton} ${styles.signInButton}`}>
             Sign in
           </Link>
-          <Link href="/register" className="btn btn-primary">
+          <Link href="/register" className={`btn btn-primary ${styles.navButton} ${styles.getStartedButton}`}>
             Get started
           </Link>
         </div>

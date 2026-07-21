@@ -1,17 +1,26 @@
 // ============================================
-// On-device receipt extraction (client-side only)
-// Reads the QR code or reference number out of a receipt
-// photo in the browser. The image itself is never uploaded —
-// only the extracted reference/link is sent for verification.
+// Receipt extraction pipeline
+// Reads exact PDF text and QR data locally, optionally tries a protected
+// hosted OCR fallback with an optimized image, then falls back to on-device
+// Tesseract. Only the extracted reference is used for verification.
 // ============================================
 
 import { findReceiptReference } from '@/lib/receipt-input';
+import { findReferenceInText } from '@/lib/receipt-text';
+import type { Provider } from '@/types';
 
 export interface ExtractionResult {
   /** The text to verify: a receipt URL (from QR) or a bare reference */
   input: string;
-  source: 'qr' | 'ocr';
+  source: 'qr' | 'ocr' | 'ocrspace';
 }
+
+export interface ExtractionOptions {
+  provider?: Provider;
+}
+
+const HOSTED_OCR_ENABLED = process.env.NEXT_PUBLIC_OCR_FALLBACK_ENABLED === 'true';
+const MAX_HOSTED_OCR_BYTES = 950_000;
 
 // jsQR loads on first use so it stays out of the page's initial bundle.
 let jsQrPromise: Promise<typeof import('jsqr').default> | null = null;
@@ -60,6 +69,71 @@ function drawToCanvas(img: HTMLImageElement, maxDim: number): HTMLCanvasElement 
   return canvas;
 }
 
+function resizeCanvas(source: HTMLCanvasElement, maxDim: number): HTMLCanvasElement {
+  const scale = Math.min(1, maxDim / Math.max(source.width, source.height));
+  if (scale === 1) return source;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(source.width * scale));
+  canvas.height = Math.max(1, Math.round(source.height * scale));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return source;
+  ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+function canvasToJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+}
+
+async function prepareHostedOcrImage(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  let smallest: Blob | null = null;
+  for (const maxDim of [1800, 1500, 1200]) {
+    const resized = resizeCanvas(canvas, maxDim);
+    for (const quality of [0.82, 0.7, 0.58]) {
+      const blob = await canvasToJpeg(resized, quality);
+      if (!blob) continue;
+      smallest = blob;
+      if (blob.size <= MAX_HOSTED_OCR_BYTES) return blob;
+    }
+  }
+  return smallest && smallest.size <= MAX_HOSTED_OCR_BYTES ? smallest : null;
+}
+
+async function tryHostedOcr(
+  canvas: HTMLCanvasElement,
+  provider: Provider | undefined,
+  onStatus?: (s: string) => void,
+): Promise<string | null> {
+  if (!HOSTED_OCR_ENABLED) return null;
+
+  try {
+    const image = await prepareHostedOcrImage(canvas);
+    if (!image) return null;
+
+    onStatus?.('Reading the reference with online OCR…');
+    const form = new FormData();
+    form.set('file', image, 'receipt.jpg');
+    if (provider) form.set('provider', provider);
+
+    const response = await fetch('/api/ocr', {
+      method: 'POST',
+      body: form,
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (!response.ok) return null;
+
+    const body = (await response.json().catch(() => null)) as {
+      success?: boolean;
+      data?: { reference?: string | null };
+    } | null;
+    const reference = body?.success ? body.data?.reference?.trim() : null;
+    return reference || null;
+  } catch {
+    return null;
+  }
+}
+
 async function tryDecodeQr(img: HTMLImageElement): Promise<string | null> {
   const jsQR = await getJsQr();
   // Try a few sizes — QR density vs. resolution trade-off
@@ -74,61 +148,33 @@ async function tryDecodeQr(img: HTMLImageElement): Promise<string | null> {
   return null;
 }
 
-/** Find a payment reference in OCR'd / PDF-extracted receipt text */
-export function findReferenceInText(text: string): string | null {
-  const cleaned = text.replace(/[^\x20-\x7E\n]/g, ' ');
-
-  // CBE receipt URL printed as text
-  const url = cleaned.match(/https?:\/\/\S*cbe\.com\.et\S*/i);
-  if (url) return url[0];
-
-  // CBE reference: FT + 10 alphanumerics (allow trailing suffix digits)
-  const ft = cleaned.match(/\bFT[A-Z0-9]{10}(?:[0-9]{8})?\b/i);
-  if (ft) return ft[0].toUpperCase();
-
-  // Dashen "Transaction Reference" specifically (prefer it over the longer
-  // "Transfer Reference" printed just below on the same receipt).
-  const dashenLabelled = cleaned.match(/Transaction\s+Reference\s*:?\s*([0-9A-Z]{10,20})/i);
-  if (dashenLabelled) return dashenLabelled[1].toUpperCase();
-
-  // Dashen reference shape on a receipt, e.g. 132WDTS26196000H or
-  // 878WDTS252330002 — digits, an embedded letter run, digits, optional
-  // trailing letter.
-  const dashen = cleaned.match(/\b[0-9]{2,4}[A-Z]{2,6}[0-9]{6,14}[A-Z]?\b/);
-  if (dashen) return dashen[0].toUpperCase();
-
-  // Labelled reference/receipt number (Telebirr, M-Pesa, Dashen…)
-  const labelled = cleaned.match(
-    /(?:reference|receipt|transaction|invoice)\s*(?:no|number|id)?\s*(?:\([^)]*\))?\s*[.:#]?\s+([A-Z0-9]{8,20})\b/i,
-  );
-  if (labelled && /[0-9]/.test(labelled[1])) return labelled[1].toUpperCase();
-
-  return null;
-}
-
 /** OCR a canvas and hunt for a payment reference in the recognised text */
-export async function ocrCanvasForReference(canvas: HTMLCanvasElement): Promise<string | null> {
+export async function ocrCanvasForReference(
+  canvas: HTMLCanvasElement,
+  provider?: Provider,
+): Promise<string | null> {
   const worker = await getOcrWorker();
   const {
     data: { text },
   } = await worker.recognize(canvas);
-  return findReferenceInText(text);
+  return findReferenceInText(text, provider);
 }
 
 /**
- * Extract a verifiable reference from a receipt photo, entirely on-device.
- * Order: QR code → OCR text. A QR that decodes but holds an app-only
+ * Extract a verifiable reference from a receipt photo.
+ * Order: QR code → hosted OCR (when configured) → on-device OCR. A QR that decodes but holds an app-only
  * payload (e.g. telebirr's in-app receipt QR, which only the telebirr
  * SuperApp can verify) falls through to OCR of the printed reference.
  */
 export async function extractReceiptData(
   file: File,
   onStatus?: (s: string) => void,
+  options: ExtractionOptions = {},
 ): Promise<ExtractionResult | null> {
   // Shared receipts are often PDFs (e.g. Dashen SuperApp's downloaded receipt).
   // A digital PDF carries real text, so read the reference straight from it —
   // no photo, no OCR — and fall back to rendering pages for QR/OCR if needed.
-  if (isPdf(file)) return extractFromPdf(file, onStatus);
+  if (isPdf(file)) return extractFromPdf(file, onStatus, options);
 
   onStatus?.('Looking for the QR code…');
   const img = await loadImage(file);
@@ -136,8 +182,12 @@ export async function extractReceiptData(
   const qr = await tryDecodeQr(img);
   if (qr && findReceiptReference(qr)) return { input: qr, source: 'qr' };
 
-  onStatus?.('Reading the reference number from the photo…');
-  const ref = await ocrCanvasForReference(drawToCanvas(img, 2000));
+  const canvas = drawToCanvas(img, 2000);
+  const hostedRef = await tryHostedOcr(canvas, options.provider, onStatus);
+  if (hostedRef) return { input: hostedRef, source: 'ocrspace' };
+
+  onStatus?.('Trying on-device OCR…');
+  const ref = await ocrCanvasForReference(canvas, options.provider);
   if (ref) return { input: ref, source: 'ocr' };
 
   return null;
@@ -148,14 +198,15 @@ function isPdf(file: File): boolean {
 }
 
 /**
- * Extract a reference from a receipt PDF on-device. Tries, in order:
+ * Extract a reference from a receipt PDF. Tries, in order:
  *   1. the embedded text layer (digital PDFs — exact, no OCR),
  *   2. a QR code rendered from the first page,
- *   3. OCR of the rendered page (scanned PDFs).
+ *   3. hosted OCR, then on-device OCR of the rendered page (scanned PDFs).
  */
 async function extractFromPdf(
   file: File,
   onStatus?: (s: string) => void,
+  options: ExtractionOptions = {},
 ): Promise<ExtractionResult | null> {
   onStatus?.('Reading the receipt PDF…');
   const pdfjs = await import('pdfjs-dist');
@@ -176,7 +227,7 @@ async function extractFromPdf(
       const content = await page.getTextContent();
       allText += content.items.map((i) => ('str' in i ? i.str : '')).join(' ') + '\n';
     }
-    const fromText = findReferenceInText(allText);
+    const fromText = findReferenceInText(allText, options.provider);
     if (fromText) return { input: fromText, source: 'ocr' };
 
     // 2 & 3. Render the first page and try QR, then OCR (scanned PDFs)
@@ -190,7 +241,11 @@ async function extractFromPdf(
       if (code?.data?.trim() && findReceiptReference(code.data.trim())) {
         return { input: code.data.trim(), source: 'qr' };
       }
-      const ref = await ocrCanvasForReference(canvas);
+      const hostedRef = await tryHostedOcr(canvas, options.provider, onStatus);
+      if (hostedRef) return { input: hostedRef, source: 'ocrspace' };
+
+      onStatus?.('Trying on-device OCR…');
+      const ref = await ocrCanvasForReference(canvas, options.provider);
       if (ref) return { input: ref, source: 'ocr' };
     }
     return null;

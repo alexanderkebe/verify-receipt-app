@@ -7,6 +7,7 @@ import { getJsQr } from '@/lib/image-extract';
 import ResultCard from './ResultCard';
 
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
+const QR_SCANNER_PROVIDERS = new Set<Provider>(['CBE', 'CBE_BIRR', 'ABYSSINIA']);
 
 // Pre-sized 128px variants (see public/providers/) — the originals were up
 // to 645KB for logos rendered at 32-48px.
@@ -152,7 +153,14 @@ export default function VerifyForm() {
 
   // Start/stop the camera + QR scan loop as the user enters/leaves scan mode
   useEffect(() => {
-    if (mode !== 'scan' || result || !selectedProvider) return;
+    if (
+      mode !== 'scan' ||
+      result ||
+      !selectedProvider ||
+      !QR_SCANNER_PROVIDERS.has(selectedProvider)
+    ) {
+      return;
+    }
     let cancelled = false;
     let rafId = 0;
     const canvas = document.createElement('canvas');
@@ -309,10 +317,22 @@ export default function VerifyForm() {
   }, [mode, result, scanEpoch, selectedProvider]);
 
   function openScanTab() {
+    if (!selectedProvider || !QR_SCANNER_PROVIDERS.has(selectedProvider)) {
+      setMode('manual');
+      return;
+    }
     setCameraError(null);
     setScanNotice(null);
     setError(null);
     setMode('scan');
+  }
+
+  function selectProvider(provider: Provider) {
+    stopCamera();
+    setCameraError(null);
+    setScanNotice(null);
+    setSelectedProvider(provider);
+    setMode(QR_SCANNER_PROVIDERS.has(provider) ? 'scan' : 'manual');
   }
 
   async function verify(e: React.FormEvent) {
@@ -320,15 +340,17 @@ export default function VerifyForm() {
     await runVerification(input, selectedProvider ?? undefined);
   }
 
-  // The photo is processed on-device: QR decode first, then OCR.
-  // Only the extracted reference/link is sent to the server.
+  // Exact PDF text and QR data are read on-device first. Hosted OCR is an
+  // optional fallback; Tesseract remains available if it is disabled/fails.
   async function uploadVerify(e: React.FormEvent) {
     e.preventDefault();
     if (!file) return;
     setError(null);
     try {
       const { extractReceiptData } = await import('@/lib/image-extract');
-      const extracted = await extractReceiptData(file, setExtractStatus);
+      const extracted = await extractReceiptData(file, setExtractStatus, {
+        provider: selectedProvider ?? undefined,
+      });
       setExtractStatus(null);
       if (!extracted) {
         setError(
@@ -422,12 +444,12 @@ export default function VerifyForm() {
             <div
               key={p}
               className={`provider-card prov-${p.toLowerCase()}`}
-              onClick={() => setSelectedProvider(p)}
+              onClick={() => selectProvider(p)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
-                  setSelectedProvider(p);
+                  selectProvider(p);
                 }
               }}
             >
@@ -444,7 +466,7 @@ export default function VerifyForm() {
 
   return (
     <div style={{ maxWidth: 560, margin: '0 auto' }} className={selectedProvider === 'CBE' ? 'cbe-theme' : selectedProvider === 'CBE_BIRR' ? 'cbe_birr-theme' : selectedProvider === 'TELEBIRR' ? 'telebirr-theme' : selectedProvider === 'DASHEN' ? 'dashen-theme' : selectedProvider === 'ABYSSINIA' ? 'abyssinia-theme' : selectedProvider === 'MPESA' ? 'mpesa-theme' : ''}>
-      {mode === 'scan' ? (
+      {mode === 'scan' && QR_SCANNER_PROVIDERS.has(selectedProvider) ? (
         <div 
           className="full-screen-scanner" 
           style={{
@@ -655,13 +677,15 @@ export default function VerifyForm() {
           )}
 
           <div className="tabs">
-            <button
-              type="button"
-              className={`tab ${(mode as string) === 'scan' ? 'active' : ''}`}
-              onClick={openScanTab}
-            >
-              Scan QR code
-            </button>
+            {QR_SCANNER_PROVIDERS.has(selectedProvider) && (
+              <button
+                type="button"
+                className={`tab ${(mode as string) === 'scan' ? 'active' : ''}`}
+                onClick={openScanTab}
+              >
+                Scan QR code
+              </button>
+            )}
             <button
               type="button"
               className={`tab ${mode === 'manual' ? 'active' : ''}`}
@@ -764,8 +788,9 @@ export default function VerifyForm() {
                   </div>
                 )}
                 <span className="input-help">
-                  Upload a photo, screenshot, or PDF receipt (e.g. the Dashen SuperApp receipt) — the
-                  QR code or reference number is read on your device and the file is never uploaded.
+                  Upload a photo, screenshot, or PDF receipt (e.g. the Dashen SuperApp receipt). PDF
+                  text and QR codes are read on your device first. When online OCR is enabled, an
+                  optimized receipt image may be sent securely to the configured OCR service.
                 </span>
               </div>
               <div className="input-group mb-6">
@@ -835,4 +860,3 @@ export default function VerifyForm() {
     </div>
   );
 }
-
