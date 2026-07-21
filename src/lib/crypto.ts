@@ -114,6 +114,14 @@ export function generateToken(): string {
 }
 
 /**
+ * Hash a one-time token before storing it in the database.
+ * If the database is exposed, the raw password-reset link is still not recoverable.
+ */
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+/**
  * Hash a file buffer to SHA-256 (for receipt image integrity)
  */
 export function hashFile(buffer: Buffer): string {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import styles from '../auth.module.css';
+import PasswordField from '@/components/auth/PasswordField';
 
 const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 const SOCIALS = [
@@ -18,6 +19,7 @@ function LoginForm() {
   const params = useSearchParams();
   const callbackUrl = params.get('callbackUrl') || '/dashboard';
   const justRegistered = params.get('registered') === '1';
+  const passwordReset = params.get('reset') === '1';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,6 +52,12 @@ function LoginForm() {
       {justRegistered && (
         <div className="alert alert-success mb-4" role="alert">
           Account created successfully! Sign in below.
+        </div>
+      )}
+
+      {passwordReset && (
+        <div className="alert alert-success mb-4" role="status">
+          Password updated. You can sign in with your new password.
         </div>
       )}
 
@@ -106,40 +114,41 @@ function LoginForm() {
         </>
       )}
 
-      <form className={styles.form} onSubmit={onSubmit}>
+      <form id="sign-in-form" name="sign-in" method="post" className={styles.form} onSubmit={onSubmit}>
         <div className="input-group">
           <label className="input-label" htmlFor="email">
             Email
           </label>
           <input
             id="email"
+            name="email"
             type="email"
             className="input-field"
             placeholder="you@business.et"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             required
           />
         </div>
 
-        <div className="input-group">
-          <div className="flex items-center justify-between">
-            <label className="input-label" htmlFor="password">
-              Password
-            </label>
+        <div>
+          <div className="flex items-center justify-end" style={{ marginBottom: 4 }}>
             <Link href="/forgot-password" className="text-xs">
               Forgot password?
             </Link>
           </div>
-          <input
-            id="password"
-            type="password"
-            className="input-field"
-            placeholder="••••••••"
+          <PasswordField
+            id="current-password"
+            name="password"
+            label="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             autoComplete="current-password"
+            placeholder="••••••••"
             required
           />
         </div>

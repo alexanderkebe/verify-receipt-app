@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import styles from '../auth.module.css';
 import { PROVIDER_LABELS, type Provider } from '@/types';
+import PasswordField from '@/components/auth/PasswordField';
 
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 const MOBILE_MONEY: Provider[] = ['TELEBIRR', 'CBE_BIRR', 'MPESA'];
@@ -211,10 +212,10 @@ function RegisterContent() {
       {error && <div className="alert alert-danger mb-4" role="alert">{error}</div>}
 
       {flow === 'business' ? (
-        <form className={styles.form} onSubmit={submitBusiness}>
+        <form id="business-registration-form" name="business-registration" method="post" className={styles.form} onSubmit={submitBusiness}>
           <div className="input-group">
-            <label className="input-label">Business name<span className="required">*</span></label>
-            <input className="input-field" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Addis Coffee House" autoComplete="organization" required />
+            <label className="input-label" htmlFor="business-name">Business name<span className="required">*</span></label>
+            <input id="business-name" name="organization" className="input-field" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Addis Coffee House" autoComplete="organization" required />
           </div>
 
           <div className="input-group">
@@ -272,24 +273,38 @@ function RegisterContent() {
 
           <div className={styles.formRow}>
             <div className="input-group">
-              <label className="input-label">Your full name<span className="required">*</span></label>
-              <input className="input-field" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} autoComplete="name" required />
+              <label className="input-label" htmlFor="owner-name">Your full name<span className="required">*</span></label>
+              <input id="owner-name" name="name" className="input-field" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} autoComplete="name" required />
             </div>
             <div className="input-group">
-              <label className="input-label">Email<span className="required">*</span></label>
-              <input type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
+              <label className="input-label" htmlFor="registration-email">Email<span className="required">*</span></label>
+              <input id="registration-email" name="email" type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} required />
             </div>
           </div>
 
           <div className={styles.formRow}>
-            <div className="input-group">
-              <label className="input-label">Your password<span className="required">*</span></label>
-              <input type="password" className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" autoComplete="new-password" minLength={8} required />
-            </div>
-            <div className="input-group">
-              <label className="input-label">Business password<span className="required">*</span></label>
-              <input type="password" className="input-field" value={businessPassword} onChange={(e) => setBusinessPassword(e.target.value)} placeholder="Share with your team" minLength={6} required />
-            </div>
+            <PasswordField
+              id="new-password"
+              name="password"
+              label="Your password"
+              value={password}
+              onChange={setPassword}
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+              minLength={8}
+              required
+            />
+            <PasswordField
+              id="business-password"
+              name="businessPassword"
+              label="Business password"
+              value={businessPassword}
+              onChange={setBusinessPassword}
+              autoComplete="off"
+              placeholder="Share with your team"
+              minLength={6}
+              required
+            />
           </div>
           <span className="input-help" style={{ marginTop: -8 }}>
             Employees use the business password to join your team — keep it different from your own password.
@@ -300,7 +315,7 @@ function RegisterContent() {
           </button>
         </form>
       ) : (
-        <form className={styles.form} onSubmit={submitJoin}>
+        <form id="employee-registration-form" name="employee-registration" method="post" className={styles.form} onSubmit={submitJoin}>
           <div className="input-group" style={{ position: 'relative' }}>
             <label className="input-label">Your business<span className="required">*</span></label>
             {selected ? (
@@ -351,25 +366,38 @@ function RegisterContent() {
             <span className="input-help">Matches appear as you type.</span>
           </div>
 
-          <div className="input-group">
-            <label className="input-label">Business password<span className="required">*</span></label>
-            <input type="password" className="input-field" value={joinPassword} onChange={(e) => setJoinPassword(e.target.value)} placeholder="Ask your manager for it" required />
-          </div>
+          <PasswordField
+            id="join-business-password"
+            name="businessPassword"
+            label="Business password"
+            value={joinPassword}
+            onChange={setJoinPassword}
+            autoComplete="off"
+            placeholder="Ask your manager for it"
+            required
+          />
 
           <div className="input-group">
-            <label className="input-label">Your full name<span className="required">*</span></label>
-            <input className="input-field" value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" required />
+            <label className="input-label" htmlFor="employee-name">Your full name<span className="required">*</span></label>
+            <input id="employee-name" name="name" className="input-field" value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" required />
           </div>
 
           <div className={styles.formRow}>
             <div className="input-group">
-              <label className="input-label">Email<span className="required">*</span></label>
-              <input type="email" className="input-field" value={joinEmail} onChange={(e) => setJoinEmail(e.target.value)} autoComplete="email" required />
+              <label className="input-label" htmlFor="employee-registration-email">Email<span className="required">*</span></label>
+              <input id="employee-registration-email" name="email" type="email" className="input-field" value={joinEmail} onChange={(e) => setJoinEmail(e.target.value)} autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} required />
             </div>
-            <div className="input-group">
-              <label className="input-label">Password<span className="required">*</span></label>
-              <input type="password" className="input-field" value={joinUserPassword} onChange={(e) => setJoinUserPassword(e.target.value)} placeholder="At least 8 characters" autoComplete="new-password" minLength={8} required />
-            </div>
+            <PasswordField
+              id="new-password"
+              name="password"
+              label="Password"
+              value={joinUserPassword}
+              onChange={setJoinUserPassword}
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+              minLength={8}
+              required
+            />
           </div>
 
           <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
