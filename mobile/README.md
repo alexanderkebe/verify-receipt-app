@@ -13,8 +13,8 @@ Full plan and phase breakdown: [`../docs/mobile-app-plan.md`](../docs/mobile-app
 | 0 | Backend: `/api/me`, `/api/me/stats`, `/api/me/password`, API 401s | ✅ Done |
 | 1 | Scaffold, session handling, login, forced password change, tabs, Home | ✅ Done |
 | 2 | Verify flow: provider picker, QR scan, manual entry, result, decisions | ✅ Done |
+| 3 | Progress screen (7-day chart) + paginated history | ✅ Done |
 | 2b | Photo + OCR fallback for providers without scannable QRs | ⬜ Next |
-| 3 | Progress chart + history list | ⬜ |
 | 4 | Polish + EAS build (APK) | ⬜ |
 
 ## Running it
@@ -64,8 +64,8 @@ app/                      expo-router routes
   (auth)/change-password  forced temp-password change
   (tabs)/index.tsx        Home — today's tiles + verify CTA
   (tabs)/verify.tsx       provider picker → scan/manual → result → decision
-  (tabs)/progress.tsx     Phase 3
-  (tabs)/history.tsx      Phase 3
+  (tabs)/progress.tsx     7-day trend, today's totals, decision split
+  (tabs)/history.tsx      paginated list of my verifications
 src/
   api/session.ts          NextAuth login + SecureStore token storage
   api/client.ts           apiFetch: base URL, cookie, envelope, 401 handling
@@ -123,3 +123,13 @@ Smoke checklist for Phase 2 (verify):
    rather than failing a lookup
 6. Type a reference that doesn't exist → YELLOW "unable to verify"
 7. Return to Home → today's tiles reflect the new verification
+
+Smoke checklist for Phase 3 (progress + history):
+
+1. Progress → today's numbers match the web dashboard's employee breakdown
+   for the same user and day
+2. Verify a receipt, return to Progress → the counters moved (the cache tag
+   is busted on write, so no 60s wait)
+3. History → the newest verification is at the top with the right badge
+4. Scroll past 20 rows → the next page appends
+5. Pull to refresh on either screen → data reloads
