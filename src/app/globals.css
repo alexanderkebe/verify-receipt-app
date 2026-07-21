@@ -763,7 +763,7 @@ ul, ol {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: transparent;
   z-index: calc(var(--z-sticky) - 1);
   border: none;
   padding: 0;
