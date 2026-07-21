@@ -8,13 +8,15 @@ const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 const TIERS = Object.keys(SUBSCRIPTION_CONFIG) as SubscriptionTier[];
 
+// Pre-sized 128px variants (see public/providers/) — rendered at 18px here,
+// so the multi-hundred-KB originals were pure download waste.
 const PROVIDER_LOGOS: Record<Provider, string> = {
-  CBE: '/Commercial Bank Of Ethiopia (PNG) @Izuki Labs.png',
-  TELEBIRR: '/Telebirr icon.png',
-  DASHEN: '/dashen_bank bank icon.png',
-  ABYSSINIA: '/abyssinia icon.png',
-  CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
-  MPESA: '/m-pesa icon.png',
+  CBE: '/providers/cbe.png',
+  TELEBIRR: '/providers/telebirr.png',
+  DASHEN: '/providers/dashen.png',
+  ABYSSINIA: '/providers/abyssinia.png',
+  CBE_BIRR: '/providers/cbebirr.png',
+  MPESA: '/providers/mpesa-icon.png',
 };
 
 const STEPS = [

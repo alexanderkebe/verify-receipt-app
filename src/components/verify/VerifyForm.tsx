@@ -1,26 +1,28 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import jsQR from 'jsqr';
 import { PROVIDER_LABELS, PROVIDER_COLORS, type Provider, type VerificationResult } from '@/types';
 import { findReceiptReference } from '@/lib/receipt-input';
+import { getJsQr } from '@/lib/image-extract';
 import ResultCard from './ResultCard';
 
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 
+// Pre-sized 128px variants (see public/providers/) — the originals were up
+// to 645KB for logos rendered at 32-48px.
 const PROVIDER_LOGOS: Record<Provider, string> = {
-  CBE: '/Commercial Bank Of Ethiopia (SVG) @Izuki Labs.svg',
+  CBE: '/providers/cbe.png',
   TELEBIRR: '/Telebirr (SVG) @Izuki Labs.svg',
-  DASHEN: '/dashen_bank bank icon.png',
-  ABYSSINIA: '/abyssinia icon.png',
-  CBE_BIRR: '/CBE Birr (PNG) @Izuki Labs.png',
-  MPESA: '/m-pesa logo and icon.png',
+  DASHEN: '/providers/dashen.png',
+  ABYSSINIA: '/providers/abyssinia.png',
+  CBE_BIRR: '/providers/cbebirr.png',
+  MPESA: '/providers/mpesa.png',
 };
 
 const PROVIDER_THEME_LOGOS: Record<Provider, string> = {
   ...PROVIDER_LOGOS,
-  DASHEN: '/dashin-icon-white.png',
-  ABYSSINIA: '/abyssinia-white-icon.png',
+  DASHEN: '/providers/dashen-white.png',
+  ABYSSINIA: '/providers/abyssinia-white.png',
 };
 
 const PROVIDER_SUBTITLES: Record<Provider, string> = {
@@ -179,8 +181,17 @@ export default function VerifyForm() {
     }
     let nativeDetector: NativeDetector | null = null;
 
+    // jsQR is only the fallback decoder — load it lazily so devices with a
+    // native BarcodeDetector never pay for it, and throttle it (a full
+    // getImageData + decode every animation frame pins the main thread).
+    let jsQrLib: Awaited<ReturnType<typeof getJsQr>> | null = null;
+    let jsQrRequested = false;
+    let lastJsQrAt = 0;
+    const JSQR_INTERVAL_MS = 80; // ~12 decode passes per second
+
     const decodeWithJsQr = (video: HTMLVideoElement): string | null => {
-      if (!ctx) return null;
+      const jsQR = jsQrLib;
+      if (!ctx || !jsQR) return null;
       const vw = video.videoWidth;
       const vh = video.videoHeight;
       // Cycle through three passes so every kind of code gets covered:
@@ -222,7 +233,19 @@ export default function VerifyForm() {
             nativeDetector = null; // detector failed at runtime — fall back to jsQR
           }
         }
-        if (!text) text = decodeWithJsQr(video);
+        if (!text) {
+          if (!jsQrLib && !jsQrRequested) {
+            jsQrRequested = true;
+            void getJsQr().then((lib) => {
+              jsQrLib = lib;
+            });
+          }
+          const now = performance.now();
+          if (jsQrLib && now - lastJsQrAt >= JSQR_INTERVAL_MS) {
+            lastJsQrAt = now;
+            text = decodeWithJsQr(video);
+          }
+        }
         if (cancelled || !scanningRef.current) return;
         if (text && handleQrDetected(text)) {
           // Accepted — camera stopped, verification in flight

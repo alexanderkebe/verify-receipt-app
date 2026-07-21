@@ -5,13 +5,33 @@
 // only the extracted reference/link is sent for verification.
 // ============================================
 
-import jsQR from 'jsqr';
 import { findReceiptReference } from '@/lib/receipt-input';
 
 export interface ExtractionResult {
   /** The text to verify: a receipt URL (from QR) or a bare reference */
   input: string;
   source: 'qr' | 'ocr';
+}
+
+// jsQR loads on first use so it stays out of the page's initial bundle.
+let jsQrPromise: Promise<typeof import('jsqr').default> | null = null;
+export function getJsQr() {
+  return (jsQrPromise ??= import('jsqr').then((m) => m.default));
+}
+
+// One OCR worker per tab — creating a worker re-initialises the tesseract
+// WASM core (seconds on mobile), so keep it alive between scans. A failed
+// spin-up resets the cache so the next attempt can retry.
+type OcrWorker = Awaited<ReturnType<(typeof import('tesseract.js'))['createWorker']>>;
+let ocrWorkerPromise: Promise<OcrWorker> | null = null;
+function getOcrWorker(): Promise<OcrWorker> {
+  if (!ocrWorkerPromise) {
+    ocrWorkerPromise = import('tesseract.js').then((m) => m.createWorker('eng'));
+    ocrWorkerPromise.catch(() => {
+      ocrWorkerPromise = null;
+    });
+  }
+  return ocrWorkerPromise;
 }
 
 async function loadImage(file: File): Promise<HTMLImageElement> {
@@ -40,7 +60,8 @@ function drawToCanvas(img: HTMLImageElement, maxDim: number): HTMLCanvasElement 
   return canvas;
 }
 
-function tryDecodeQr(img: HTMLImageElement): string | null {
+async function tryDecodeQr(img: HTMLImageElement): Promise<string | null> {
+  const jsQR = await getJsQr();
   // Try a few sizes — QR density vs. resolution trade-off
   for (const maxDim of [1000, 1600, 2400]) {
     const canvas = drawToCanvas(img, maxDim);
@@ -87,16 +108,11 @@ export function findReferenceInText(text: string): string | null {
 
 /** OCR a canvas and hunt for a payment reference in the recognised text */
 export async function ocrCanvasForReference(canvas: HTMLCanvasElement): Promise<string | null> {
-  const { createWorker } = await import('tesseract.js');
-  const worker = await createWorker('eng');
-  try {
-    const {
-      data: { text },
-    } = await worker.recognize(canvas);
-    return findReferenceInText(text);
-  } finally {
-    await worker.terminate();
-  }
+  const worker = await getOcrWorker();
+  const {
+    data: { text },
+  } = await worker.recognize(canvas);
+  return findReferenceInText(text);
 }
 
 /**
@@ -117,7 +133,7 @@ export async function extractReceiptData(
   onStatus?.('Looking for the QR code…');
   const img = await loadImage(file);
 
-  const qr = tryDecodeQr(img);
+  const qr = await tryDecodeQr(img);
   if (qr && findReceiptReference(qr)) return { input: qr, source: 'qr' };
 
   onStatus?.('Reading the reference number from the photo…');
@@ -143,10 +159,14 @@ async function extractFromPdf(
 ): Promise<ExtractionResult | null> {
   onStatus?.('Reading the receipt PDF…');
   const pdfjs = await import('pdfjs-dist');
-  // Run the parser inline (no separate worker file to host under Next.js)
-  pdfjs.GlobalWorkerOptions.workerSrc = '';
+  // Parse off the main thread — the bundler emits the worker as a static
+  // asset via the import.meta.url pattern, so nothing needs hosting manually.
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url,
+  ).toString();
   const buf = await file.arrayBuffer();
-  const doc = await pdfjs.getDocument({ data: new Uint8Array(buf), useWorker: false } as Parameters<typeof pdfjs.getDocument>[0]).promise;
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(buf) }).promise;
 
   try {
     // 1. Embedded text — join every page's text and hunt for the reference
@@ -163,6 +183,7 @@ async function extractFromPdf(
     onStatus?.('Scanning the receipt image…');
     const canvas = await renderPdfPage(doc, 1);
     if (canvas) {
+      const jsQR = await getJsQr();
       const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const code = jsQR(data.data, data.width, data.height);

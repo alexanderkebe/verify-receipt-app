@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import Providers from './providers';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
@@ -61,7 +60,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <div className="liquid-blob liquid-blob-2" />
             <div className="liquid-blob liquid-blob-3" />
           </div>
-          <Providers>{children}</Providers>
+          {children}
         </ThemeProvider>
       </body>
     </html>
