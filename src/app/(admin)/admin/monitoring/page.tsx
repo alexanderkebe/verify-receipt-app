@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import prisma from '@/lib/prisma';
-import { checkApiHealth } from '@/lib/verifier-api';
+import { getCachedApiHealth } from '@/lib/verifier-api';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Monitoring' };
@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'Monitoring' };
 async function getMonitoring() {
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [health, last24h, failures24h] = await Promise.all([
-    checkApiHealth(),
+    getCachedApiHealth(),
     prisma.receiptVerification.count({ where: { createdAt: { gte: dayAgo } } }),
     prisma.receiptVerification.count({
       where: { createdAt: { gte: dayAgo }, verificationStatus: { in: ['ERROR', 'TIMEOUT'] } },

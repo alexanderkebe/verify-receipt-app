@@ -12,6 +12,9 @@ export async function GET() {
     await requireRole('PLATFORM_ADMIN');
     const businesses = await prisma.business.findMany({
       orderBy: { createdAt: 'desc' },
+      // Bound the list — each row fans out into subscription + _count
+      // subqueries, so an unbounded scan grows with every signup.
+      take: 200,
       include: {
         subscription: true,
         _count: { select: { users: true, verifications: true } },

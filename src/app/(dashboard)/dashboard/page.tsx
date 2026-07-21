@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { auth } from '@/auth';
-import { getDashboardStats } from '@/lib/dashboard';
-import { TrendChart, ProviderChart } from '@/components/dashboard/DashboardCharts';
+import { getCachedDashboardStats } from '@/lib/dashboard';
+import { TrendChart, ProviderChart } from '@/components/dashboard/DashboardChartsLazy';
 import { PROVIDER_LABELS, type ResultLevel } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +21,7 @@ function fmt(n: number) {
 export default async function DashboardPage() {
   const session = await auth();
   const businessId = session!.user.businessId!;
-  const stats = await getDashboardStats(businessId);
+  const stats = await getCachedDashboardStats(businessId);
 
   const cards = [
     { label: 'Verifications today', value: fmt(stats.totalToday) },

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
-import { checkApiHealth } from '@/lib/verifier-api';
+import { getCachedApiHealth } from '@/lib/verifier-api';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Admin Overview' };
@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Admin Overview' };
 async function getOverview() {
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [health, businesses, activeBusinesses, totalVerifications, last24h] = await Promise.all([
-    checkApiHealth(),
+    getCachedApiHealth(),
     prisma.business.count(),
     prisma.business.count({ where: { status: 'ACTIVE' } }),
     prisma.receiptVerification.count(),

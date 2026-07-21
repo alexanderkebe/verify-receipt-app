@@ -1,6 +1,6 @@
 // GET /api/admin/monitoring — platform health & volume
 import prisma from '@/lib/prisma';
-import { checkApiHealth } from '@/lib/verifier-api';
+import { getCachedApiHealth } from '@/lib/verifier-api';
 import { requireRole, ok, handleError } from '@/lib/api-helpers';
 import { isDemoMode, demoAdminMonitoring } from '@/lib/demo-data';
 
@@ -13,7 +13,7 @@ export async function GET() {
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const [health, businesses, activeBusinesses, totalVerifications, last24h, failures24h] = await Promise.all([
-      checkApiHealth(),
+      getCachedApiHealth(),
       prisma.business.count(),
       prisma.business.count({ where: { status: 'ACTIVE' } }),
       prisma.receiptVerification.count(),

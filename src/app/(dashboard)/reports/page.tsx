@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { auth } from '@/auth';
-import { getDashboardStats } from '@/lib/dashboard';
+import { getCachedDashboardStats } from '@/lib/dashboard';
 import { PROVIDER_LABELS } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'Reports' };
 
 export default async function ReportsPage() {
   const session = await auth();
-  const stats = await getDashboardStats(session!.user.businessId!);
+  const stats = await getCachedDashboardStats(session!.user.businessId!);
 
   return (
     <>

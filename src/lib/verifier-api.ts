@@ -3,6 +3,7 @@
 // Handles all communication with Vixen878/verifier-api
 // ============================================
 
+import { unstable_cache } from 'next/cache';
 import { VERIFIER_API_BASE_URL, VERIFIER_API_KEY, PROVIDER_ENDPOINTS, VERIFICATION_CONFIG } from '@/lib/constants';
 import type { Provider, NormalizedVerificationResult, VerificationStatus, TransactionStatus } from '@/types';
 
@@ -65,6 +66,15 @@ export async function checkApiHealth(): Promise<{ healthy: boolean; responseTime
     return { healthy: false, responseTime: Date.now() - start };
   }
 }
+
+/**
+ * Health check cached for 60s — the admin overview and monitoring surfaces
+ * all render it, and each uncached call costs up to a 5s external round trip.
+ * The verify-page health endpoint stays on the uncached checkApiHealth.
+ */
+export const getCachedApiHealth = unstable_cache(checkApiHealth, ['verifier-health'], {
+  revalidate: 60,
+});
 
 // ---- Provider-Specific Verification ----
 export async function verifyByReference(
