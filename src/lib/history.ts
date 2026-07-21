@@ -32,9 +32,10 @@ interface Scope {
 export async function getHistory(
   scope: Scope,
   filters: HistoryFilters,
+  maxPageSize: number = MAX_PAGE_SIZE,
 ): Promise<PaginatedResponse<HistoryItem>> {
   const page = Math.max(1, filters.page ?? 1);
-  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, filters.pageSize ?? DEFAULT_PAGE_SIZE));
+  const pageSize = Math.min(maxPageSize, Math.max(1, filters.pageSize ?? DEFAULT_PAGE_SIZE));
 
   const where: Prisma.ReceiptVerificationWhereInput = { businessId: scope.businessId };
 
@@ -74,7 +75,21 @@ export async function getHistory(
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { employee: { select: { fullName: true } } },
+      select: {
+        id: true,
+        referenceMasked: true,
+        provider: true,
+        resultLevel: true,
+        verifiedAmount: true,
+        expectedAmount: true,
+        payerName: true,
+        recipientMatches: true,
+        amountMatches: true,
+        isDuplicate: true,
+        employeeDecision: true,
+        createdAt: true,
+        employee: { select: { fullName: true } },
+      },
     }),
   ]);
 

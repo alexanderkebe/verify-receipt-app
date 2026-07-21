@@ -161,6 +161,7 @@ export const VERIFICATION_CONFIG = {
 // ---- Pagination ----
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
+export const EXPORT_MAX_ROWS = 5000;
 
 // ---- Nav Items ----
 export const DASHBOARD_NAV_ITEMS = [

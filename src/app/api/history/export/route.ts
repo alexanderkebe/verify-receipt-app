@@ -2,6 +2,7 @@
 import { NextRequest } from 'next/server';
 import { getHistory } from '@/lib/history';
 import { requireBusiness, handleError } from '@/lib/api-helpers';
+import { EXPORT_MAX_ROWS } from '@/lib/constants';
 import { PROVIDER_LABELS } from '@/types';
 import type { Provider, ResultLevel } from '@/types';
 import { isDemoMode, demoHistory } from '@/lib/demo-data';
@@ -37,8 +38,9 @@ export async function GET(req: NextRequest) {
         dateFrom: sp.get('dateFrom') || undefined,
         dateTo: sp.get('dateTo') || undefined,
         page: 1,
-        pageSize: 5000,
+        pageSize: EXPORT_MAX_ROWS,
       },
+      EXPORT_MAX_ROWS,
     );
 
     const header = [
