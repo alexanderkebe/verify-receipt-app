@@ -299,13 +299,13 @@ model ReceiptVerification {
   image                ReceiptImage?
   fraudAlerts          FraudAlert[]
 
-  @@index([businessId])
   @@index([referenceHash])
   @@index([provider])
   @@index([resultLevel])
   @@index([createdAt])
   @@index([employeeId])
   @@index([businessId, referenceHash])
+  @@index([businessId, createdAt])
 }
 
 model ReceiptImage {
