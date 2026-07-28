@@ -8,6 +8,7 @@ import { AuditActions, extractRequestMeta, logAuditEvent } from '@/lib/audit';
 import { isDemoMode } from '@/lib/demo-data';
 import { consumePasswordResetQuota } from '@/lib/password-reset-rate-limit';
 import { isPasswordEmailConfigured, sendPasswordResetEmail } from '@/lib/email';
+import { buildPasswordResetUrl } from '@/lib/password-reset-url';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -50,6 +51,13 @@ export async function POST(request: NextRequest) {
     const rawToken = generateToken();
     const storedToken = hashToken(rawToken);
     const expiresAt = new Date(Date.now() + AUTH_CONFIG.resetTokenExpMinutes * 60_000);
+    const resetUrl = buildPasswordResetUrl({
+      token: rawToken,
+      requestOrigin: request.nextUrl.origin,
+      publicAppUrl: process.env.NEXT_PUBLIC_APP_URL,
+      authUrl: process.env.NEXTAUTH_URL,
+    });
+
     await prisma.user.update({
       where: { id: user.id },
       data: { resetToken: storedToken, resetTokenExp: expiresAt },
@@ -63,10 +71,6 @@ export async function POST(request: NextRequest) {
       entityId: user.id,
       ...meta,
     });
-
-    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || request.nextUrl.origin)
-      .replace(/\/$/, '');
-    const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(rawToken)}`;
 
     if (!emailConfigured) {
       return ok({ message: GENERIC_MESSAGE, devResetUrl: resetUrl });

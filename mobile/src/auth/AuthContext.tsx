@@ -23,19 +23,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const token = await loadToken();
-      if (!token) {
-        if (!cancelled) setStatus('signedOut');
-        return;
-      }
       try {
+        const token = await loadToken();
+        if (!token) {
+          if (!cancelled) setStatus('signedOut');
+          return;
+        }
         const me = await getMe();
         if (cancelled) return;
         setUser(me);
         setStatus('signedIn');
       } catch {
-        // Token rejected/expired — apiFetch already cleared it
-        if (!cancelled) setStatus('signedOut');
+        // Token restoration errors must not leave the app on its loading screen.
+        if (!cancelled) {
+          setUser(null);
+          setStatus('signedOut');
+        }
       }
     })();
     return () => {

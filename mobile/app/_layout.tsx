@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ function AuthGate() {
   const { status, user } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const { colors } = useTheme();
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -35,13 +37,24 @@ function AuthGate() {
     if (inAuthGroup) router.replace('/(tabs)');
   }, [status, user?.mustChangePassword, segments, router]);
 
-  if (status === 'loading') return <Loading />;
-
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+
+      {status === 'loading' && (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: colors.bg, zIndex: 999, alignItems: 'center', justifyContent: 'center' },
+          ]}
+        >
+          <Loading />
+        </View>
+      )}
+    </View>
   );
 }
 

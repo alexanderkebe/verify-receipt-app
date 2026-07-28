@@ -223,6 +223,7 @@ model User {
   @@index([email])
   @@index([role])
   @@index([status])
+  @@index([resetToken])
 }
 
 model PaymentAccount {

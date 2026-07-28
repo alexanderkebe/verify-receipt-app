@@ -15,10 +15,6 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(repoRoot, 'node_modules'),
 ];
-// Prefer the app's own copies of React/React Native even when a shared module
-// resolves from the repo root.
-config.resolver.disableHierarchicalLookup = true;
-
 config.resolver.extraNodeModules = {
   // The app's own source
   '@': path.resolve(projectRoot, 'src'),
@@ -32,8 +28,12 @@ config.resolver.extraNodeModules = {
 const sharedTypesShim = path.resolve(projectRoot, 'src/lib/shared-types.ts');
 const upstreamResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName === '@/types' && context.originModulePath.startsWith(path.resolve(repoRoot, 'src'))) {
-    return { type: 'sourceFile', filePath: sharedTypesShim };
+  if (moduleName === '@/types') {
+    const origin = context.originModulePath ? path.normalize(context.originModulePath).toLowerCase() : '';
+    const repoSrc = path.normalize(path.resolve(repoRoot, 'src')).toLowerCase();
+    if (origin.startsWith(repoSrc) || origin.startsWith(path.normalize(projectRoot).toLowerCase())) {
+      return { type: 'sourceFile', filePath: sharedTypesShim };
+    }
   }
   return upstreamResolveRequest
     ? upstreamResolveRequest(context, moduleName, platform)

@@ -56,6 +56,9 @@ Open [http://localhost:3000](http://localhost:3000).
 | `VERIFIER_API_KEY` | API key — get one free at [verify.leul.et](https://verify.leul.et) |
 | `ENCRYPTION_KEY` | 32-byte hex key for encrypting account numbers |
 | `DEMO_MODE` / `NEXT_PUBLIC_DEMO_MODE` | `true` = run without a database |
+| `RESEND_API_KEY` | Resend API key used to deliver password-recovery emails |
+| `PASSWORD_RESET_FROM_EMAIL` | Sender on a domain verified in Resend |
+| `NEXT_PUBLIC_APP_URL` | Public app origin used in recovery links; never use localhost in production |
 
 ### Demo mode
 
@@ -84,6 +87,23 @@ Sign-up is one simple form: bank, account holder name, account number, business 
    - For a no-database demo deployment: `DEMO_MODE=true`, `NEXT_PUBLIC_DEMO_MODE=true`, plus `VERIFIER_API_KEY` for real verification.
    - For production: a `DATABASE_URL` (e.g. Vercel Postgres / Neon) and `DEMO_MODE=false`.
 3. Deploy — the build runs `prisma generate` automatically.
+
+### Password recovery deployment
+
+Password recovery needs both database fields and an email provider; deploying
+the UI alone is not enough.
+
+1. Apply the current Prisma schema to the production database with
+   `npm run db:push` using the production `DATABASE_URL` and `DIRECT_URL`.
+2. Verify a sending domain in Resend.
+3. Set `RESEND_API_KEY`, `PASSWORD_RESET_FROM_EMAIL`,
+   `NEXT_PUBLIC_APP_URL=https://YOUR-DOMAIN`, and
+   `NEXTAUTH_URL=https://YOUR-DOMAIN` in the deployment environment.
+4. Keep `DEMO_MODE=false`, redeploy, and request a link for an `ACTIVE` user.
+
+The API intentionally returns the same success text for registered and
+unregistered addresses. If no message arrives, inspect the server logs for a
+Resend status and request ID.
 
 ## Verification Flow
 

@@ -28,6 +28,10 @@ npm start          # then press "a" for Android, or scan the QR with Expo Go
 Requires [Expo Go](https://expo.dev/go) on the phone (same Wi-Fi as the
 computer), or an Android emulator.
 
+The sign-in screen includes password recovery. It sends the request to the
+configured web API, and the emailed HTTPS link opens the web reset form. The
+backend must have Resend configured as described in the root `README.md`.
+
 > **First install needs a stable connection.** The Expo dependency tree is
 > large (~1,200 packages). On a flaky link, `npm install` can fail partway
 > with `ECONNRESET`, and on Windows an antivirus/indexer can lock files

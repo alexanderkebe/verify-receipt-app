@@ -51,6 +51,7 @@ public/dashin/
 public/mpesa/
 
 # mobile (Expo) build artifacts
+/.expo
 /mobile/node_modules
 /mobile/.expo
 /mobile/dist

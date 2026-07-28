@@ -54,6 +54,17 @@ export async function sendPasswordResetEmail({
   });
 
   if (!response.ok) {
-    throw new Error(`Password recovery email failed with status ${response.status}`);
+    const requestId = response.headers.get('x-request-id') || response.headers.get('resend-id');
+    const responseBody = await response.text().catch(() => '');
+    const details = responseBody.replace(/\s+/g, ' ').trim().slice(0, 500);
+    throw new Error(
+      [
+        `Password recovery email failed with status ${response.status}`,
+        requestId ? `request ${requestId}` : '',
+        details,
+      ]
+        .filter(Boolean)
+        .join(' — '),
+    );
   }
 }

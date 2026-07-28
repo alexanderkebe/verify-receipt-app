@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "mobile": "npm --prefix mobile start",
+    "mobile:tunnel": "npm --prefix mobile run tunnel",
     "build": "prisma generate && next build",
     "start": "next start",
     "test": "tsx --test tests/telebirr-recipient.test.ts tests/receipt-text.test.ts tests/ocr-space.test.ts tests/password-reset.test.ts",

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthContext';
 import { Button, ErrorBanner, Input, Label, Screen, Subtitle } from '@/components/ui';
@@ -7,6 +8,7 @@ import { spacing, useTheme } from '@/theme';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
+  const router = useRouter();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -85,16 +87,25 @@ export default function LoginScreen() {
 
           <Button title="Sign in" onPress={submit} loading={loading} />
 
-          <Text
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => router.push('/forgot-password' as Href)}
             style={{
-              color: colors.textMuted,
-              fontSize: 13,
-              textAlign: 'center',
               marginTop: spacing.xl,
+              alignSelf: 'center',
             }}
           >
-            Forgot your password? Ask your manager to reset it for you.
-          </Text>
+            <Text
+              style={{
+                color: colors.accent,
+                fontSize: 13,
+                fontWeight: '600',
+                textAlign: 'center',
+              }}
+            >
+              Forgot your password?
+            </Text>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "scheme": "receiptguard",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "backgroundColor": "#0B0F19",
       "resizeMode": "contain"

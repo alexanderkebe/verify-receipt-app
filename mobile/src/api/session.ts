@@ -9,11 +9,14 @@
 
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 const TOKEN_KEY = 'session-token';
 
 export const API_BASE_URL: string =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string) ?? 'https://verify-receipt-app.vercel.app';
+  process.env.EXPO_PUBLIC_API_URL ||
+  ((Constants.expoConfig?.extra?.apiBaseUrl as string) ??
+    'https://verify-receipt-app.vercel.app');
 
 // NextAuth prefixes the cookie with __Secure- when served over HTTPS.
 const SESSION_COOKIE_NAMES = ['__Secure-authjs.session-token', 'authjs.session-token'];
@@ -21,20 +24,39 @@ const CSRF_COOKIE_NAMES = ['__Host-authjs.csrf-token', 'authjs.csrf-token'];
 
 let cachedToken: string | null = null;
 
+function webStorage(): Storage | null {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
+  try {
+    return window.localStorage;
+  } catch {
+    // Storage can be disabled by browser privacy settings.
+    return null;
+  }
+}
+
 export async function loadToken(): Promise<string | null> {
   if (cachedToken) return cachedToken;
-  cachedToken = await SecureStore.getItemAsync(TOKEN_KEY);
+  const storage = webStorage();
+  cachedToken = storage
+    ? storage.getItem(TOKEN_KEY)
+    : Platform.OS === 'web'
+      ? null
+      : await SecureStore.getItemAsync(TOKEN_KEY);
   return cachedToken;
 }
 
 export async function saveToken(token: string): Promise<void> {
   cachedToken = token;
-  await SecureStore.setItemAsync(TOKEN_KEY, token);
+  const storage = webStorage();
+  if (storage) storage.setItem(TOKEN_KEY, token);
+  else if (Platform.OS !== 'web') await SecureStore.setItemAsync(TOKEN_KEY, token);
 }
 
 export async function clearToken(): Promise<void> {
   cachedToken = null;
-  await SecureStore.deleteItemAsync(TOKEN_KEY);
+  const storage = webStorage();
+  if (storage) storage.removeItem(TOKEN_KEY);
+  else if (Platform.OS !== 'web') await SecureStore.deleteItemAsync(TOKEN_KEY);
 }
 
 /** Pull a cookie value out of one or more Set-Cookie header strings. */
