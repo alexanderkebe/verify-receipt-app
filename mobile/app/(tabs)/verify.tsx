@@ -301,7 +301,6 @@ export default function VerifyScreen() {
                 value={reference}
                 onChangeText={setReference}
                 placeholder={PROVIDER_PLACEHOLDERS[provider]}
-                autoCapitalize="characters"
                 autoCorrect={false}
               />
               <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: spacing.xs }}>
