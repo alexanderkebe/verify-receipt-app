@@ -21,6 +21,9 @@ import QrScanner from '@/components/QrScanner';
 import ResultCard from '@/components/ResultCard';
 import { Button, Card, ErrorBanner, Input, Label, Screen, Subtitle, Title } from '@/components/ui';
 import { radius, spacing, useTheme } from '@/theme';
+import { createDebug } from '@/lib/debug';
+
+const debug = createDebug('[VERIFY]');
 
 type Mode = 'scan' | 'manual';
 
@@ -42,7 +45,10 @@ export default function VerifyScreen() {
 
   const canScan = provider !== null && QR_SCANNER_PROVIDERS.has(provider);
 
+  debug('VerifyScreen rendered — provider:', provider, 'mode:', mode, 'loading:', loading, 'result:', !!result);
+
   function reset() {
+    debug('reset');
     setResult(null);
     setError(null);
     setDecision(null);
@@ -53,34 +59,47 @@ export default function VerifyScreen() {
   }
 
   function selectProvider(next: Provider) {
+    debug('selectProvider:', next);
     setProvider(next);
     reset();
     // Providers whose QRs are app-internal go straight to manual entry
-    setMode(QR_SCANNER_PROVIDERS.has(next) ? 'scan' : 'manual');
+    const nextMode = QR_SCANNER_PROVIDERS.has(next) ? 'scan' : 'manual';
+    debug('selectProvider — mode set to:', nextMode);
+    setMode(nextMode);
   }
 
   async function runVerification(input: string) {
+    debug('runVerification — input:', input.substring(0, 40) + (input.length > 40 ? '...' : ''), 'provider:', provider, 'expectedAmount:', expectedAmount);
     setLoading(true);
     setError(null);
     setDecision(null);
     setDecisionError(null);
     try {
       const amount = expectedAmount ? Number(expectedAmount) : undefined;
-      setResult(await verifyReceipt(input.trim(), provider ?? undefined, amount));
+      const resultData = await verifyReceipt(input.trim(), provider ?? undefined, amount);
+      debug('runVerification — SUCCESS, resultLevel:', resultData.resultLevel, 'id:', resultData.id);
+      setResult(resultData);
     } catch (e) {
+      debug('runVerification — ERROR:', (e as Error).message);
       setError((e as Error).message);
     } finally {
       setLoading(false);
+      debug('runVerification — completed, loading=false');
     }
   }
 
   /** Returns true when the QR was usable and verification started. */
   function handleScanned(value: string): boolean {
+    debug('handleScanned — raw value:', value.substring(0, 60));
     const parsed = findReceiptReference(value);
+    debug('handleScanned — parsed:', parsed);
     if (!parsed || parsed.appOnly) {
-      setScanNotice(appOnlyQrMessage(provider));
+      const notice = appOnlyQrMessage(provider);
+      debug('handleScanned — app-only QR, notice:', notice);
+      setScanNotice(notice);
       return false;
     }
+    debug('handleScanned — usable reference:', parsed.reference);
     setScanNotice(null);
     setReference(parsed.reference);
     void runVerification(value);
@@ -88,12 +107,18 @@ export default function VerifyScreen() {
   }
 
   async function submitDecision(next: Decision) {
-    if (!result) return;
+    if (!result) {
+      debug('submitDecision — no result yet, skipping');
+      return;
+    }
+    debug('submitDecision — submitting:', next, 'for verification:', result.id);
     setDecisionError(null);
     try {
       await recordDecision(result.id, next);
+      debug('submitDecision — SUCCESS:', next);
       setDecision(next);
     } catch (e) {
+      debug('submitDecision — ERROR:', (e as Error).message);
       setDecisionError((e as Error).message);
     }
   }

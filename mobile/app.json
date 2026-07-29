@@ -11,14 +11,21 @@
       "backgroundColor": "#0B0F19",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "et.receiptguard.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#0B0F19"
       },
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "et.receiptguard.app"
     },
     "plugins": [
       "expo-router",
@@ -38,7 +45,12 @@
     ],
     "extra": {
       "apiBaseUrl": "https://verify-receipt-app.vercel.app",
-      "router": {}
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "7f584f79-d39c-4be3-81e8-f8b54c114385"
+      }
     },
     "experiments": {
       "typedRoutes": true

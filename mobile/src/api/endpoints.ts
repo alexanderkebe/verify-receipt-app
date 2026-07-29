@@ -4,6 +4,9 @@
 // ============================================
 
 import { apiFetch } from './client';
+import { createDebug } from '@/lib/debug';
+
+const debug = createDebug('[ENDPOINTS]');
 
 export type Provider = 'CBE' | 'TELEBIRR' | 'DASHEN' | 'ABYSSINIA' | 'CBE_BIRR' | 'MPESA';
 export type ResultLevel = 'GREEN' | 'YELLOW' | 'RED';
@@ -80,32 +83,48 @@ export interface Paginated<T> {
   totalPages: number;
 }
 
-export const getMe = () => apiFetch<Me>('/api/me');
+export const getMe = () => {
+  debug('getMe called');
+  return apiFetch<Me>('/api/me');
+};
 
-export const getMeStats = () => apiFetch<MeStats>('/api/me/stats');
+export const getMeStats = () => {
+  debug('getMeStats called');
+  return apiFetch<MeStats>('/api/me/stats');
+};
 
-export const changePassword = (currentPassword: string, newPassword: string) =>
-  apiFetch<{ changed: boolean }>('/api/me/password', {
+export const changePassword = (currentPassword: string, newPassword: string) => {
+  debug('changePassword called');
+  return apiFetch<{ changed: boolean }>('/api/me/password', {
     method: 'POST',
     body: { currentPassword, newPassword },
   });
+};
 
 /** Telebirr lookups can take ~45s server-side — allow for it. */
-export const verifyReceipt = (input: string, provider?: Provider, expectedAmount?: number) =>
-  apiFetch<VerificationResult>('/api/verify/manual', {
+export const verifyReceipt = (input: string, provider?: Provider, expectedAmount?: number) => {
+  debug('verifyReceipt called:', { inputLength: input.length, provider, expectedAmount });
+  return apiFetch<VerificationResult>('/api/verify/manual', {
     method: 'POST',
     body: { input, provider, expectedAmount },
     timeoutMs: 60_000,
   });
+};
 
-export const recordDecision = (verificationId: string, decision: Decision, reason?: string) =>
-  apiFetch<unknown>(`/api/verify/${verificationId}/decision`, {
+export const recordDecision = (verificationId: string, decision: Decision, reason?: string) => {
+  debug('recordDecision called:', { verificationId, decision, reason });
+  return apiFetch<unknown>(`/api/verify/${verificationId}/decision`, {
     method: 'POST',
     body: { decision, reason },
   });
+};
 
-export const getHistory = (page = 1, pageSize = 20) =>
-  apiFetch<Paginated<HistoryItem>>(`/api/history?page=${page}&pageSize=${pageSize}`);
+export const getHistory = (page = 1, pageSize = 20) => {
+  debug('getHistory called:', { page, pageSize });
+  return apiFetch<Paginated<HistoryItem>>(`/api/history?page=${page}&pageSize=${pageSize}`);
+};
 
-export const getHealth = () =>
-  apiFetch<{ healthy: boolean; responseTime: number }>('/api/verify/health');
+export const getHealth = () => {
+  debug('getHealth called');
+  return apiFetch<{ healthy: boolean; responseTime: number }>('/api/verify/health');
+};
