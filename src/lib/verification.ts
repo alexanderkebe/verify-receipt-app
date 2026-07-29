@@ -375,31 +375,41 @@ async function callVerifierApi(
   return verifyUniversal(input.reference, input.suffix, input.phoneNumber);
 }
 
-async function checkSubscriptionLimit(businessId: string): Promise<void> {
-  const subscription = await prisma.subscription.findUnique({
-    where: { businessId },
-  });
+// Monthly verification limit disabled — was gating free-tier usage counts
+// async function checkSubscriptionLimit(businessId: string): Promise<void> {
+//   const subscription = await prisma.subscription.findUnique({
+//     where: { businessId },
+//   });
+//
+//   if (!subscription) return; // No subscription = allow (grace)
+//
+//   if (subscription.monthlyVerificationLimit === -1) return; // Unlimited
+//
+//   if (subscription.verificationsUsedThisMonth >= subscription.monthlyVerificationLimit) {
+//     throw new Error('Monthly verification limit reached. Please upgrade your plan.');
+//   }
+// }
 
-  if (!subscription) return; // No subscription = allow (grace)
-
-  if (subscription.monthlyVerificationLimit === -1) return; // Unlimited
-
-  if (subscription.verificationsUsedThisMonth >= subscription.monthlyVerificationLimit) {
-    throw new Error('Monthly verification limit reached. Please upgrade your plan.');
-  }
+async function checkSubscriptionLimit(_businessId: string): Promise<void> {
+  // Limit check disabled
 }
 
-async function incrementVerificationCount(businessId: string): Promise<void> {
-  try {
-    await prisma.subscription.update({
-      where: { businessId },
-      data: {
-        verificationsUsedThisMonth: { increment: 1 },
-      },
-    });
-  } catch {
-    // Subscription might not exist yet — ignore
-  }
+// Monthly verification count increment disabled alongside the limit check.
+// async function incrementVerificationCount(businessId: string): Promise<void> {
+//   try {
+//     await prisma.subscription.update({
+//       where: { businessId },
+//       data: {
+//         verificationsUsedThisMonth: { increment: 1 },
+//       },
+//     });
+//   } catch {
+//     // Subscription might not exist yet — ignore
+//   }
+// }
+
+async function incrementVerificationCount(_businessId: string): Promise<void> {
+  // Verification count increment disabled
 }
 
 async function checkDuplicate(
