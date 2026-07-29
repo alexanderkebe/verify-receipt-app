@@ -67,6 +67,11 @@ function AuthGate() {
     if (inAuthGroup) {
       debug('AuthGate → signedIn, no password change needed, redirecting to /(tabs)');
       router.replace('/(tabs)');
+    } else if (path.length === 0) {
+      // Empty segments means no route mounted yet (e.g. just after login).
+      // Redirect to tabs so the initial screen loads.
+      debug('AuthGate → signedIn, segments empty, redirecting to /(tabs)');
+      router.replace('/(tabs)');
     } else {
       debug('AuthGate → signedIn, already in tabs');
     }

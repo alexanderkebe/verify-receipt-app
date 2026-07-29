@@ -7,12 +7,14 @@
     "scheme": "receiptguard",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
+    "updates": {
+      "enabled": false
+    },
     "splash": {
-      "backgroundColor": "#0B0F19",
-      "resizeMode": "contain"
+      "backgroundColor": "#0B0F19"
     },
     "assetBundlePatterns": [
-      "**/*"
+      "assets/**/*"
     ],
     "android": {
       "package": "et.receiptguard.app",

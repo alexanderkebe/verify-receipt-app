@@ -191,12 +191,18 @@ export default function VerifyScreen() {
             </View>
           )}
 
-          <Button
-            title="Verify another receipt"
-            variant="ghost"
-            onPress={reset}
-            style={{ marginTop: spacing.lg }}
-          />
+          <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
+            <Button
+              title="Verify another receipt"
+              variant="ghost"
+              onPress={reset}
+            />
+            <Button
+              title="Change provider"
+              variant="ghost"
+              onPress={() => { reset(); setProvider(null); }}
+            />
+          </View>
         </ScrollView>
       </Screen>
     );
@@ -206,11 +212,32 @@ export default function VerifyScreen() {
   return (
     <Screen style={{ paddingTop: insets.top + spacing.md, padding: 0 }}>
       <ScrollView contentContainerStyle={{ padding: spacing.lg }} keyboardShouldPersistTaps="handled">
-        <View style={{ marginBottom: spacing.lg }}>
-          <Title>{PROVIDER_SHORT_LABELS[provider]}</Title>
-          <Pressable onPress={() => setProvider(null)}>
-            <Text style={{ color: colors.accent, fontSize: 14, marginTop: spacing.xs }}>
-              Change provider
+        {/* Back-to-providers header with visible button */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: spacing.lg,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Title>{PROVIDER_SHORT_LABELS[provider]}</Title>
+          </View>
+          <Pressable
+            onPress={() => setProvider(null)}
+            style={({ pressed }) => ({
+              backgroundColor: colors.bgTertiary,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: radius.pill,
+              paddingVertical: spacing.sm,
+              paddingHorizontal: spacing.md,
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text style={{ color: colors.textSecondary, fontSize: 13, fontWeight: '600' }}>
+              Change
             </Text>
           </Pressable>
         </View>
