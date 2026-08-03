@@ -6,7 +6,7 @@ import { DASHBOARD_NAV_ITEMS } from '@/lib/constants';
 import type { UserRole } from '@/types';
 import Icon from '@/components/ui/Icon';
 
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Deresegn';
 
 export default function Sidebar({
   role,
@@ -22,9 +22,9 @@ export default function Sidebar({
 
   return (
     <aside className={`sidebar ${open ? 'open' : ''}`}>
-      <Link href="/dashboard" className="sidebar-logo" onClick={onNavigate}>
-        <span className="sidebar-logo-icon">R</span>
-        <span className="sidebar-logo-text">{APP_NAME}</span>
+      <Link href="/dashboard" className="sidebar-logo" onClick={onNavigate} aria-label={APP_NAME}>
+        <img src="/brand/logo-dark.png" alt="" className="sidebar-logo-icon theme-logo-dark" />
+        <img src="/brand/logo-light.png" alt="" className="sidebar-logo-icon theme-logo-light" />
       </Link>
       <nav className="sidebar-nav">
         {items.map((item) => {

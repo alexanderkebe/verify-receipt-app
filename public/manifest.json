@@ -1,10 +1,21 @@
 {
-  "name": "ReceiptGuard — Receipt Verification & Fraud Prevention",
-  "short_name": "ReceiptGuard",
-  "description": "Verify customer payment receipts and prevent fraud.",
-  "start_url": "/dashboard",
+  "name": "Deresegn — Receipt Verification & Fraud Prevention",
+  "short_name": "Deresegn",
+  "description": "Verify customer payment receipts in seconds, detect duplicates and fraud, and manage your team.",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#0A0E17",
-  "theme_color": "#0A0E17",
-  "icons": []
+  "background_color": "#0B0F19",
+  "theme_color": "#0B0F19",
+  "icons": [
+    {
+      "src": "/brand/mark-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/mark.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }

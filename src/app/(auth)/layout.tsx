@@ -2,7 +2,7 @@ import Link from 'next/link';
 import styles from './auth.module.css';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Deresegn';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,11 +11,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <ThemeToggle />
       </div>
       <div className={styles.authAside}>
-        <Link href="/" className={styles.brand}>
-          <span className={styles.brandIcon}>R</span>
-          <span className={styles.brandText}>{APP_NAME}</span>
+        <Link href="/" className={styles.brand} aria-label={APP_NAME}>
+          <img src="/brand/logo-dark.png" alt="" className="brandLogo theme-logo-dark" />
+          <img src="/brand/logo-light.png" alt="" className="brandLogo theme-logo-light" />
         </Link>
         <div className={styles.asideContent}>
+          <img src="/brand/logo-blue.png" alt="" className={styles.asideLogo} />
           <h1 className={styles.asideTitle}>Verify every receipt. Stop fraud before it starts.</h1>
           <p className={styles.asideSubtitle}>
             Confirm Telebirr, CBE, M-Pesa and bank receipts in seconds. Detect duplicates, mismatched

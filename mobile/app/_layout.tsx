@@ -1,18 +1,19 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import * as NativeSplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
 import { Loading } from '@/components/ui';
+import AnimatedSplash from '@/components/SplashScreen';
 import { useTheme } from '@/theme';
 import { createDebug } from '@/lib/debug';
 
 const debug = createDebug('[AUTHGATE]');
 
 // Keep the splash screen visible until auth state is resolved
-SplashScreen.preventAutoHideAsync().catch(() => {
+NativeSplashScreen.preventAutoHideAsync().catch(() => {
   // Silently fail — not critical if this doesn't work
 });
 
@@ -26,8 +27,16 @@ function AuthGate() {
   const segments = useSegments();
   const router = useRouter();
   const { colors } = useTheme();
+  // In-app animated splash (matches the web splash) shown on every cold start.
+  const [showSplash, setShowSplash] = useState(true);
 
-  debug('AuthGate render — status:', status, 'segments:', segments, 'mustChangePassword:', user?.mustChangePassword);
+  debug('AuthGate render — status:', status, 'segments:', segments, 'mustChangePassword:', user?.mustChangePassword, 'showSplash:', showSplash);
+
+  // Hand off from the native splash to the animated in-app splash seamlessly
+  // (same dark backdrop, same lockup).
+  useEffect(() => {
+    NativeSplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (status === 'loading') {
@@ -36,7 +45,7 @@ function AuthGate() {
     }
 
     // Hide splash once we know the auth state
-    SplashScreen.hideAsync().catch(() => {});
+    NativeSplashScreen.hideAsync().catch(() => {});
 
     const path = segments as string[];
     const inAuthGroup = path[0] === '(auth)';
@@ -86,7 +95,7 @@ function AuthGate() {
         <Stack.Screen name="(tabs)" />
       </Stack>
 
-      {status === 'loading' && (
+      {!showSplash && status === 'loading' && (
         <View
           style={[
             StyleSheet.absoluteFill,
@@ -96,6 +105,8 @@ function AuthGate() {
           <Loading />
         </View>
       )}
+
+      {showSplash && <AnimatedSplash onDone={() => setShowSplash(false)} />}
     </View>
   );
 }

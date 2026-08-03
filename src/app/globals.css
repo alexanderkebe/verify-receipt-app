@@ -7,10 +7,10 @@
 
 /* ---- CSS Custom Properties ---- */
 :root {
-  /* Brand Colors — Ethiopian flag inspired */
-  --color-gold: #F5A623;
-  --color-gold-light: #FFD080;
-  --color-gold-dark: #C7851A;
+  /* Brand Colors — Deresegn logo blue (names kept for compatibility) */
+  --color-gold: #0078B8;
+  --color-gold-light: #45BCE8;
+  --color-gold-dark: #005888;
   --color-green: #10B981;
   --color-green-light: #34D399;
   --color-green-dark: #059669;
@@ -40,10 +40,12 @@
   --color-text-muted: #4B5563;
   --color-text-inverse: #0B0F19;
 
-  /* Accent - Dark Mode */
-  --color-accent: #F5A623;
-  --color-accent-hover: #FFB944;
-  --color-accent-subtle: #2D2922;
+  /* Accent - Dark Mode (brand blue) */
+  --color-accent: #0078B8;
+  --color-accent-hover: #3FB8E8;
+  --color-accent-subtle: #12324A;
+  /* Text rendered on top of the accent color (buttons, avatars) */
+  --color-on-accent: #FFFFFF;
 
   /* Status Colors — Verification Results - Dark Mode */
   --color-status-green: #10B981;
@@ -77,6 +79,7 @@
   --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.6);
   --shadow-glow-gold: 0 0 25px rgba(245, 166, 35, 0.25);
+  --shadow-glow-accent: 0 0 25px rgba(0, 120, 184, 0.30);
   --shadow-glow-green: 0 0 25px rgba(16, 185, 129, 0.25);
   --shadow-glow-red: 0 0 25px rgba(239, 68, 68, 0.25);
   --shadow-glass-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -169,10 +172,12 @@
   --color-text-muted: #94A3B8;
   --color-text-inverse: #FFFFFF;
 
-  /* Accent - Light Mode */
-  --color-accent: #C7851A;
-  --color-accent-hover: #F5A623;
-  --color-accent-subtle: #F7EEDD;
+  /* Accent - Light Mode (brand blue) */
+  --color-accent: #006898;
+  --color-accent-hover: #0078B8;
+  --color-accent-subtle: #E4F2F9;
+  /* Text rendered on top of the accent color (buttons, avatars) */
+  --color-on-accent: #FFFFFF;
 
   /* Status Colors — Verification Results - Light Mode */
   --color-status-green: #059669;
@@ -199,6 +204,7 @@
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
   --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.12);
   --shadow-glow-gold: 0 0 20px rgba(245, 166, 35, 0.15);
+  --shadow-glow-accent: 0 0 20px rgba(0, 120, 184, 0.18);
   --shadow-glow-green: 0 0 20px rgba(5, 150, 105, 0.15);
   --shadow-glow-red: 0 0 20px rgba(220, 38, 38, 0.15);
   --shadow-glass-glow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
@@ -377,13 +383,13 @@ ul, ol {
 /* Primary */
 .btn-primary {
   background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
-  color: var(--color-text-inverse);
-  box-shadow: var(--shadow-sm), 0 0 0 0 rgba(245, 166, 35, 0);
+  color: var(--color-on-accent);
+  box-shadow: var(--shadow-sm), 0 0 0 0 rgba(0, 120, 184, 0);
 }
 .btn-primary:hover {
   background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold));
-  color: var(--color-text-inverse);
-  box-shadow: var(--shadow-md), var(--shadow-glow-gold);
+  color: var(--color-on-accent);
+  box-shadow: var(--shadow-md), var(--shadow-glow-accent);
   transform: translateY(-1px);
 }
 .btn-primary:active {
@@ -758,21 +764,14 @@ ul, ol {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-5) var(--space-5);
+  padding: 12px var(--space-5);
   border-bottom: 1px solid var(--color-border);
   height: var(--header-height);
 }
 .sidebar-logo-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-inverse);
-  font-size: var(--font-size-lg);
+  width: 88px;
+  height: 40px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 .sidebar-logo-text {
@@ -854,6 +853,35 @@ ul, ol {
 .sidebar-footer {
   padding: var(--space-4);
   border-top: 1px solid var(--color-border);
+}
+
+/* ---- Themed brand logo (navbars) ----
+   White lockup for dark surfaces, blue lockup for light — both images are
+   rendered and CSS shows the one matching the active theme. */
+.brandLogo {
+  display: block;
+  width: 140px;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.theme-logo-dark {
+  display: block;
+}
+.theme-logo-light {
+  display: none;
+}
+[data-theme='light'] .theme-logo-dark {
+  display: none;
+}
+[data-theme='light'] .theme-logo-light {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .brandLogo {
+    width: 112px;
+  }
 }
 
 /* ---- Top Header ---- */
@@ -1125,7 +1153,7 @@ ul, ol {
   justify-content: center;
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
-  color: var(--color-text-inverse);
+  color: var(--color-on-accent);
   flex-shrink: 0;
   overflow: hidden;
 }

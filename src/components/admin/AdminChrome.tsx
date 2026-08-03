@@ -17,7 +17,8 @@ export default function AdminChrome({ user, children }: { user: { name: string }
     <>
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <Link href="/admin" className="sidebar-logo" onClick={() => setSidebarOpen(false)}>
-          <span className="sidebar-logo-icon">R</span>
+          <img src="/brand/logo-dark.png" alt="" className="sidebar-logo-icon theme-logo-dark" />
+          <img src="/brand/logo-light.png" alt="" className="sidebar-logo-icon theme-logo-light" />
           <span className="sidebar-logo-text">Admin Console</span>
         </Link>
         <nav className="sidebar-nav">

@@ -1,0 +1,154 @@
+/* ============================================
+   SPLASH SCREEN — full-page load overlay
+   Brand-dark backdrop so the white lockup pops.
+   ============================================ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  background: #0b0f19;
+  overflow: hidden;
+  /* Hidden by default; only a first visit / hard reset (html[data-splash])
+     makes it visible. Prevents any flash on soft reloads. */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+:global(html[data-splash]) .overlay {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  animation: splashFadeIn 0.35s ease both;
+}
+
+:global(html[data-splash]) .overlay.leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: none;
+}
+
+/* Light-mode splash backdrop */
+:global([data-theme='light']) .overlay {
+  background: #f8fafc;
+}
+
+/* Soft brand-blue aura behind the logo */
+.glow {
+  position: absolute;
+  width: min(640px, 90vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 120, 184, 0.18) 0%,
+    rgba(0, 120, 184, 0.06) 42%,
+    transparent 70%
+  );
+  animation: glowPulse 2.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.logo {
+  position: relative;
+  width: min(230px, 58vw);
+  aspect-ratio: 1;
+  object-fit: contain;
+  animation: logoPop 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  will-change: transform, opacity;
+}
+
+.tagline {
+  position: relative;
+  margin: 0;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0 24px;
+  animation: taglineIn 0.8s ease 0.25s both;
+}
+
+:global([data-theme='light']) .tagline {
+  color: #64748b;
+}
+
+.progress {
+  position: relative;
+  width: min(220px, 50vw);
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  animation: taglineIn 0.8s ease 0.4s both;
+}
+
+:global([data-theme='light']) .progress {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.progressFill {
+  height: 100%;
+  width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0078b8, #45bce8);
+  transform-origin: left center;
+  animation: progressSweep 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.45s both;
+}
+
+/* ---- Keyframes ---- */
+@keyframes splashFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes logoPop {
+  from { opacity: 0; transform: scale(0.82) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes taglineIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.65; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+@keyframes progressSweep {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    animation: none;
+  }
+  .logo,
+  .tagline,
+  .progress {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .glow {
+    animation: none;
+  }
+  .progressFill {
+    animation: none;
+    transform: none;
+  }
+}
