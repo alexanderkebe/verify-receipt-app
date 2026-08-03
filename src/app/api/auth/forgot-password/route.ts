@@ -36,7 +36,9 @@ export async function POST(request: NextRequest) {
 
   const emailConfigured = isPasswordEmailConfigured();
   if (!emailConfigured && process.env.NODE_ENV === 'production') {
-    console.error('Password recovery requested but Resend is not configured');
+    console.error(
+      'Password recovery requested but no email provider is configured. Set RESEND_API_KEY and PASSWORD_RESET_FROM_EMAIL.',
+    );
     return fail('Password recovery is temporarily unavailable. Please contact support.', 503);
   }
 
