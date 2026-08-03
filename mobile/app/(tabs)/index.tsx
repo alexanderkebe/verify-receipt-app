@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthContext';
 import { getMeStats, type MeStats } from '@/api/endpoints';
 import { Button, Card, ErrorBanner, Screen, Subtitle, Title } from '@/components/ui';
+import { getApkUrl, shareApk } from '@/lib/shareApk';
 import { spacing, useTheme } from '@/theme';
 
 function StatTile({ label, value, color }: { label: string; value: string; color?: string }) {
@@ -28,6 +29,21 @@ export default function HomeScreen() {
   const [stats, setStats] = useState<MeStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [sharingApk, setSharingApk] = useState(false);
+
+  // Only exists in a release build (the APK is only shareable there).
+  const showShareApk = !__DEV__ && !!getApkUrl();
+
+  async function onShareApk() {
+    setSharingApk(true);
+    try {
+      await shareApk();
+    } catch (e) {
+      Alert.alert('Share app', (e as Error).message);
+    } finally {
+      setSharingApk(false);
+    }
+  }
 
   const load = useCallback(async () => {
     try {
@@ -87,6 +103,15 @@ export default function HomeScreen() {
           onPress={() => router.push('/(tabs)/verify')}
           style={{ marginTop: spacing.xl }}
         />
+        {showShareApk && (
+          <Button
+            title={sharingApk ? 'Preparing…' : 'Share app'}
+            variant="secondary"
+            loading={sharingApk}
+            onPress={onShareApk}
+            style={{ marginTop: spacing.md }}
+          />
+        )}
         <Button
           title="Sign out"
           variant="ghost"

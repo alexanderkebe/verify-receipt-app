@@ -55,6 +55,7 @@
     ],
     "extra": {
       "apiBaseUrl": "https://verify-receipt-app.vercel.app",
+      "apkUrl": "https://verify-receipt-app.vercel.app/apk/deresegn.apk",
       "router": {
         "origin": false
       },
