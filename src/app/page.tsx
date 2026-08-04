@@ -4,7 +4,7 @@ import { SUBSCRIPTION_CONFIG } from '@/lib/constants';
 import { PROVIDER_LABELS, type Provider, type SubscriptionTier } from '@/types';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Deresegn';
 const PROVIDERS = Object.keys(PROVIDER_LABELS) as Provider[];
 const TIERS = Object.keys(SUBSCRIPTION_CONFIG) as SubscriptionTier[];
 
@@ -93,9 +93,9 @@ export default function Home() {
   return (
     <div className={styles.landing}>
       <header className={styles.nav}>
-        <Link href="/" className={styles.brand}>
-          <span className={styles.brandIcon}>R</span>
-          <span className={styles.brandText}>{APP_NAME}</span>
+        <Link href="/" className={styles.brand} aria-label={APP_NAME}>
+          <img src="/brand/logo-dark.png" alt="" className="brandLogo theme-logo-dark" />
+          <img src="/brand/logo-light.png" alt="" className="brandLogo theme-logo-light" />
         </Link>
         <div className={styles.navActions}>
           <ThemeToggle />
@@ -109,7 +109,7 @@ export default function Home() {
       </header>
 
       <section className={styles.hero}>
-        <div className={`badge badge-yellow ${styles.heroBadge}`}>Built for Ethiopian businesses</div>
+        <div className={`badge ${styles.heroBadge}`}>Built for Ethiopian businesses</div>
         <h1 className={styles.heroTitle}>
           Verify every receipt.
           <br />
@@ -204,7 +204,7 @@ export default function Home() {
               <div
                 className="card card-padding"
                 key={tier}
-                style={featured ? { borderColor: 'var(--color-accent)', boxShadow: 'var(--shadow-glow-gold)' } : undefined}
+                style={featured ? { borderColor: 'var(--color-accent)', boxShadow: 'var(--shadow-glow-accent)' } : undefined}
               >
                 <h3 className="text-lg font-bold">{cfg.label}</h3>
                 <div className="text-3xl font-bold mt-2">{cfg.price}</div>
@@ -246,7 +246,7 @@ export default function Home() {
 
       <footer className={styles.footer}>
         <div className="flex items-center gap-2">
-          <span className={styles.brandIcon}>R</span>
+          <img src="/brand/mark.png" alt="" className={styles.brandMark} />
           <span className="font-semibold">{APP_NAME}</span>
         </div>
         <div className="flex items-center gap-6 flex-wrap">

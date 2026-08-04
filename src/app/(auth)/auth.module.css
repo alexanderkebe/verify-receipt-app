@@ -21,21 +21,13 @@
   gap: var(--space-3);
   color: var(--color-text-primary);
 }
-.brandIcon {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
-  color: var(--color-text-inverse);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-lg);
-}
-.brandText {
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-lg);
+
+
+.asideLogo {
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+  margin-bottom: var(--space-8);
 }
 
 .asideContent {

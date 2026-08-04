@@ -1,15 +1,21 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthContext';
 import { Button, ErrorBanner, Input, Label, Screen, Subtitle } from '@/components/ui';
 import { spacing, useTheme } from '@/theme';
 
+// White lockup for dark mode, blue lockup for light mode (white is invisible on light bg).
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const loginLogoDark = require('../../assets/login-logo.png');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const loginLogoLight = require('../../assets/login-logo-light.png');
+
 export default function LoginScreen() {
   const { signIn } = useAuth();
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState('');
@@ -44,10 +50,13 @@ export default function LoginScreen() {
           contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={{ marginBottom: spacing.xxl }}>
-            <Text style={{ color: colors.accent, fontSize: 34, fontWeight: '800' }}>
-              ReceiptGuard
-            </Text>
+          <View style={{ alignItems: 'center', marginBottom: spacing.xxl }}>
+            <Image
+              source={isDark ? loginLogoDark : loginLogoLight}
+              style={{ width: 264, height: 119 }}
+              resizeMode="contain"
+              alt=""
+            />
             <Subtitle>Sign in with the account your manager created for you.</Subtitle>
           </View>
 

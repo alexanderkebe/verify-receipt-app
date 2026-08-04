@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
+import SplashScreen from '@/components/SplashScreen';
 
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Deresegn';
 
 export const metadata: Metadata = {
   title: {
@@ -14,16 +15,8 @@ export const metadata: Metadata = {
   applicationName: APP_NAME,
   manifest: '/manifest.json',
   icons: {
-    icon: [
-      {
-        url: '/icon-light.svg',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark.svg',
-        media: '(prefers-color-scheme: dark)',
-      },
-    ],
+    icon: '/brand/mark.png',
+    apple: '/brand/mark.png',
   },
 };
 
@@ -52,6 +45,26 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             `,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // Show the splash only on a first visit or a hard reset (new
+                // session / cache-bypassed reload). sessionStorage survives
+                // normal reloads (F5) and back/forward restores, but not hard
+                // resets or fresh tabs, so a missing flag means "show".
+                var showSplash = true;
+                try {
+                  showSplash = sessionStorage.getItem('ds-splash') !== '1';
+                  if (showSplash) sessionStorage.setItem('ds-splash', '1');
+                } catch (e) {
+                  showSplash = true;
+                }
+                if (showSplash) document.documentElement.setAttribute('data-splash', '');
+              })()
+            `,
+          }}
+        />
       </head>
       <body>
         <ThemeProvider>
@@ -61,6 +74,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <div className="liquid-blob liquid-blob-3" />
           </div>
           {children}
+          <SplashScreen />
         </ThemeProvider>
       </body>
     </html>

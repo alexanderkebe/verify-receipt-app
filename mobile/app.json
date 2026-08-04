@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ReceiptGuard",
+    "name": "Deresegn",
     "slug": "receiptguard",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,8 +10,15 @@
     "updates": {
       "enabled": false
     },
+    "icon": "./assets/icon.png",
     "splash": {
-      "backgroundColor": "#0B0F19"
+      "image": "./assets/splash-light.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F8FAFC",
+      "dark": {
+        "image": "./assets/splash-dark.png",
+        "backgroundColor": "#0B0F19"
+      }
     },
     "assetBundlePatterns": [
       "assets/**/*"
@@ -20,7 +27,8 @@
       "package": "et.receiptguard.app",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#0B0F19"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
       },
       "permissions": [
         "android.permission.CAMERA"
@@ -35,27 +43,29 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "ReceiptGuard uses the camera to scan receipt QR codes and photograph receipts."
+          "cameraPermission": "Deresegn uses the camera to scan receipt QR codes and photograph receipts."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "ReceiptGuard needs access to your photos so you can verify a receipt you already saved."
+          "photosPermission": "Deresegn needs access to your photos so you can verify a receipt you already saved."
         }
       ]
     ],
     "extra": {
       "apiBaseUrl": "https://verify-receipt-app.vercel.app",
+      "apkUrl": "https://verify-receipt-app.vercel.app/apk/deresegn.apk",
       "router": {
         "origin": false
       },
       "eas": {
-        "projectId": "7f584f79-d39c-4be3-81e8-f8b54c114385"
+        "projectId": "1ed9bf77-6cf0-4608-95de-7cfabfdbe1b3"
       }
     },
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "owner": "alexanderkebe"
   }
 }

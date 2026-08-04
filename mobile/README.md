@@ -157,3 +157,46 @@ Smoke checklist for Phase 3 (progress + history):
 3. History → the newest verification is at the top with the right badge
 4. Scroll past 20 rows → the next page appends
 5. Pull to refresh on either screen → data reloads
+
+## Sharing the APK (release builds only)
+
+A **"Share app"** button appears on Home in **release builds only** (it is
+hidden in `__DEV__`). It downloads the built APK into the app's cache and
+opens the native share sheet, so users can send it via messaging apps,
+Wi-Fi Direct, Bluetooth, email, etc. — no Play Store link involved.
+
+### Wiring it up
+
+1. **Build the APK** and host it at a public URL. The web app can serve it:
+
+   ```bash
+   cd ..
+   mkdir -p public/apk
+   cp <build>/deresegn.apk public/apk/deresegn.apk
+   ```
+
+   (or host it anywhere else with a direct download link — a CDN, a shared
+   drive link that downloads the file directly, etc.)
+
+2. **Point the app at it** in `app.json` → `expo.extra.apkUrl`:
+
+   ```jsonc
+   "extra": {
+     "apiBaseUrl": "https://verify-receipt-app.vercel.app",
+     "apkUrl": "https://verify-receipt-app.vercel.app/apk/deresegn.apk"
+   }
+   ```
+
+   The `EXPO_PUBLIC_APK_URL` environment variable overrides it (useful for
+   per-profile builds in `eas.json`).
+
+3. **Build a release APK** so the button shows up:
+
+   ```bash
+   npx eas build -p android --profile production --build-type apk
+   ```
+
+4. Install that APK → sign in → Home shows **Share app**.
+
+The button is deliberately absent from dev/Expo Go — there is no APK to
+share there. `src/lib/shareApk.ts` handles the download + share.

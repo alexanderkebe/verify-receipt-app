@@ -34,14 +34,14 @@ export async function sendPasswordResetEmail({
 
   const safeName = escapeHtml(name);
   const safeUrl = escapeHtml(resetUrl);
-  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'ReceiptGuard';
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Deresegn';
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'Idempotency-Key': idempotencyKey,
-      'User-Agent': 'ReceiptGuard/1.0',
+      'User-Agent': 'Deresegn/1.0',
     },
     body: JSON.stringify({
       from,

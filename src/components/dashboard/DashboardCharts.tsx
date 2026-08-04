@@ -34,7 +34,7 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
             color: '#F1F5F9',
           }}
         />
-        <Line type="monotone" dataKey="total" name="Total" stroke="#F5A623" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="total" name="Total" stroke="#0078B8" strokeWidth={2} dot={false} />
         <Line type="monotone" dataKey="successful" name="Verified" stroke="#64748B" strokeWidth={2} dot={false} />
         <Line type="monotone" dataKey="failed" name="Issues" stroke="#EF4444" strokeWidth={2} dot={false} />
       </LineChart>

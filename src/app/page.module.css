@@ -34,24 +34,12 @@
   font-size: var(--font-size-lg);
   color: var(--color-text-primary);
 }
-.brandText {
-  display: inline-block;
-}
-@media (max-width: 560px) {
-  .brandText {
-    display: none;
-  }
-}
-.brandIcon {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
-  color: var(--color-text-inverse);
-  font-weight: var(--font-weight-bold);
+
+.brandMark {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .hero {
@@ -61,6 +49,13 @@
 }
 .heroBadge {
   margin-bottom: var(--space-6);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-hover);
+  border: 1px solid var(--color-accent);
+}
+
+[data-theme='light'] .heroBadge {
+  color: var(--color-accent);
 }
 .heroTitle {
   font-size: var(--font-size-6xl);
@@ -281,9 +276,9 @@
     font-size: var(--font-size-base);
     gap: var(--space-2);
   }
-  .brandIcon {
-    width: 32px;
-    height: 32px;
+  .brandMark {
+    width: 38px;
+    height: 38px;
   }
   .hero {
     padding: var(--space-10) 0 var(--space-10);
