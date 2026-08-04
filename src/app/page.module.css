@@ -237,6 +237,44 @@
   gap: var(--space-4);
 }
 
+/* ---- Developer credit ---- */
+.kedamiCredit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
+}
+
+.kedamiCredit:hover {
+  opacity: 1;
+}
+
+.kedamiMarkDark,
+.kedamiMarkLight {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* The white mark is for dark backgrounds — the app's default theme. The
+   dark mark only appears once the light theme is active. */
+.kedamiMarkDark {
+  display: none;
+}
+
+[data-theme='light'] .kedamiMarkDark {
+  display: block;
+}
+
+[data-theme='light'] .kedamiMarkLight {
+  display: none;
+}
+
 /* ---- Touch devices: no hover, so feature details are always visible ---- */
 @media (hover: none) {
   .featureCard {

@@ -264,6 +264,18 @@ export default function Home() {
           </Link>
         </div>
         <p className="text-sm text-muted">© {APP_NAME}. Receipt verification &amp; fraud prevention.</p>
+        <a
+          href="https://kedamicreatives.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.kedamiCredit}
+        >
+          {/* Two files, one per theme: the dark-on-transparent mark for light
+              backgrounds, the white one for dark. CSS swaps them. */}
+          <img src="/kedami-logo-dark.png" alt="" className={styles.kedamiMarkDark} />
+          <img src="/kedami-logo-light.png" alt="" className={styles.kedamiMarkLight} />
+          <span>Kedami Creatives 2026</span>
+        </a>
       </footer>
     </div>
   );
