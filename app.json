@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "e8c752c3-38e2-45bb-aaf4-3b75d39ddf6a"
+      }
+    },
+    "android": {
+      "package": "com.anobie.recipt"
+    }
+  }
+}

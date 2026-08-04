@@ -27,6 +27,28 @@ async function write(src, destDir, name, size) {
     .toFile(path.join(destDir, `${name}.png`));
 }
 
+/**
+ * Android adaptive icon foreground: `src` scaled to fit the ~66% safe zone,
+ * centered on a transparent `size`×`size` canvas. The launcher masks/crops the
+ * outer ~33%, so keeping the artwork inside the safe zone guarantees nothing is clipped.
+ */
+async function writeAdaptiveIcon(src, destDir, name, size) {
+  const inner = Math.round(size * 0.66);
+  const padding = Math.round((size - inner) / 2);
+  await sharp({
+    create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  })
+    .composite([
+      {
+        input: await sharp(path.join(LOGOS, src)).resize(inner, inner, { fit: 'cover' }).png().toBuffer(),
+        left: padding,
+        top: padding,
+      },
+    ])
+    .png()
+    .toFile(path.join(destDir, `${name}.png`));
+}
+
 /** Bounding box (full-res coords) of non-transparent content in a logo file. */
 async function contentBounds(src) {
   const meta = await sharp(path.join(LOGOS, src)).metadata();
@@ -71,7 +93,9 @@ async function main() {
   await writeTrimmed('light-splash.png', WEB, 'splash-light', 512);
 
   // Mobile
-  await write('light-splash.png', APP, 'icon', 1024);
+  // App icon: full-bleed square from the home-screen mockup (white bg, blue D + green check —
+  // much better contrast than the old blue-on-blue icon that came from light-splash.png).
+  await write('homeScreen.jpg', APP, 'icon', 1024);
   // Login title logo: white lockup trimmed to its content (no margins) for crisp scaling.
   await sharp(path.join(LOGOS, 'deresegn-02.png'))
     .trim()
@@ -80,13 +104,15 @@ async function main() {
     .toFile(path.join(APP, 'login-logo.png'));
   // Blue lockup for the login screen in light mode (white lockup is invisible on light bg).
   await writeTrimmed('light-mode.png', APP, 'login-logo-light', 1080);
-  await write('deresegn-01.png', APP, 'adaptive-icon', 700);
+  // Android adaptive foreground: artwork scaled into the ~66% safe zone on a transparent canvas
+  // so the circular launcher mask never clips the D. Pairs with backgroundColor #FFFFFF in app.json.
+  await writeAdaptiveIcon('homeScreen.jpg', APP, 'adaptive-icon', 1024);
   // Themed splash marks: white mark for the dark splash, blue mark for the light splash.
   await writeTrimmed('dark-splash.png', APP, 'splash-dark', 1024);
   await writeTrimmed('light-splash.png', APP, 'splash-light', 1024);
 
   console.log('OK — assets written to public/brand/ and mobile/assets/');
-  console.log('adaptive-icon backgroundColor (kept from the original Logo_only.png sample): #006395');
+  console.log('adaptive-icon backgroundColor (set in app.json): #FFFFFF');
 }
 
 main().catch((e) => {
